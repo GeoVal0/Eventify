@@ -1,0 +1,549 @@
+import * as React from 'react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CssBaseline from '@mui/material/CssBaseline';
+import Divider from '@mui/material/Divider';
+import FormLabel from '@mui/material/FormLabel';
+import FormControl from '@mui/material/FormControl';
+import FormHelperText from '@mui/material/FormHelperText';
+import Link from '@mui/material/Link';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import MuiCard from '@mui/material/Card';
+import { styled } from '@mui/material/styles';
+import AppTheme from '../../shared-theme/AppTheme';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import OutlinedInput from '@mui/material/OutlinedInput';
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+
+const Card = styled(MuiCard)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignSelf: 'center',
+  width: '100%',
+  padding: theme.spacing(4),
+  gap: theme.spacing(2),
+  margin: 'auto',
+  boxShadow:
+    'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
+  [theme.breakpoints.up('sm')]: {
+    width: '700px',
+  },
+  ...theme.applyStyles('dark', {
+    boxShadow:
+      'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
+  }),
+}));
+
+
+const SignUpContainer = styled(Stack)(({ theme }) => ({
+  minHeight: '100dvh', 
+  padding: theme.spacing(2),
+  [theme.breakpoints.up('sm')]: {
+    padding: theme.spacing(4),
+  },
+  overflowY: 'auto', 
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    display: 'block',
+    position: 'absolute',
+    zIndex: -1,
+    inset: 0,
+    backgroundImage: 'none', 
+    backgroundColor: theme.palette.background.default,
+  },
+}));
+
+export default function SignUpVet(props) {
+  const { login, logout } = useAuth();
+  const navigate = useNavigate();
+  const [usernameError, setUsernameError] = React.useState(false);
+  const [usernameErrorMessage, setUsernameErrorMessage] = React.useState('');
+  const [passwordError, setPasswordError] = React.useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
+  const [passError, setPassError] = React.useState(false);
+  const [passErrorMessage, setPassErrorMessage] = React.useState('');
+  const [nameError, setNameError] = React.useState(false);
+  const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+  const [lastNameError, setLastNameError] = React.useState(false);
+  const [lastNameErrorMessage, setLastNameErrorMessage] = React.useState('');
+  const [gender, setGender] = React.useState('');
+  const [genderError, setGenderError] = React.useState(false);
+  const [genderErrorMessage, setGenderErrorMessage] = React.useState('');
+  const [emailError, setEmailError] = React.useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
+  const [phoneNumberError, setPhoneNumberError] = React.useState(false);
+  const [phoneNumberErrorMessage, setPhoneNumberErrorMessage] = React.useState('');
+  const [addressError, setAddressError] = React.useState(false);
+  const [addressErrorMessage, setAddressErrorMessage] = React.useState('');
+  const [zipError, setZipError] = React.useState(false);
+  const [zipErrorMessage, setZipErrorMessage] = React.useState('');
+  const [afmError, setAfmError] = React.useState(false);
+  const [afmErrorMessage, setAfmErrorMessage] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
+  const handleMouseDownPassword = (event) => event.preventDefault();
+  const handleClickShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+
+  // Log out any existing user when visiting signup page
+  React.useEffect(() => {
+    logout();
+  }, []);
+
+  // React.useEffect(() => {
+  //   const delayDebounce = setTimeout(async() => {
+  //     // 1. Check your backend here. 
+  //   // Example: const isTaken = await myBackendCheck(username);
+    
+  //   // Let's pretend "admin" and "maria" are already taken in the database
+  //   const isTaken = (username === 'admin' || username === 'maria');
+
+  //   if (isTaken) {
+  //     setUsernameError('Το Όνομα Χρήστη χρησιμοποείται ήδη');
+  //   } else {
+  //     setUsernameError('');
+  //   }
+
+  //   }, 500); // 500ms debounce
+
+  //   return () => clearTimeout(delayDebounce);
+  // }, [username]);
+
+  const validateInputs = () => {
+    const username = document.getElementById('username');
+    const name = document.getElementById('name');
+    const lastName = document.getElementById('lastName');
+    const address = document.getElementById('address');
+    const zip = document.getElementById('zip');
+    const phoneNumber = document.getElementById('phoneNumber');
+    const afm = document.getElementById('afm');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const pass = document.getElementById('pass');
+
+    let isValid = true;
+
+    if (!username.value || username.value.length < 1){
+      setUsernameError(true);
+      setUsernameErrorMessage('Το Όνομα Χρήστη είναι υποχρεωτικό.');
+      isValid = false;
+    } else {
+      setUsernameError(false);
+      setUsernameErrorMessage('');
+    }
+
+    if (!password.value || password.value.length < 8) {
+      setPasswordError(true);
+      setPasswordErrorMessage('Ο κωδικός πρέπει να έχει μήκος τουλάχιστον 8 χαρακτήρες.');
+      isValid = false;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage('');
+    }
+
+    if (!pass.value || pass.value.length !== password.value.length || pass.value !== password.value) {
+      setPassError(true);
+      setPassErrorMessage('Η Επιβεβαίωση Κωδικού δεν ταιριάζει με τον Κωδικό Πρόσβασης.');
+      isValid = false;
+    } else {
+      setPassError(false);
+      setPassErrorMessage('');
+    }
+
+    if (!name.value || name.value.length < 1) {
+      setNameError(true);
+      setNameErrorMessage('Το Όνομα είναι υποχρεωτικό.');
+      isValid = false;
+    } else {
+      setNameError(false);
+      setNameErrorMessage('');
+    }
+
+    if (!lastName.value || lastName.value.length < 1) {
+      setLastNameError(true);
+      setLastNameErrorMessage('Το Επώνυμο είναι υποχρεωτικό.');
+      isValid = false;
+    } else {
+      setLastNameError(false);
+      setLastNameErrorMessage('');
+    }
+
+    if (!gender || gender.length === 0) {
+      setGenderError(true);
+      setGenderErrorMessage('Το Φύλο είναι υποχρεωτικό.');
+      isValid = false;
+    } else {
+      setGenderError(false);
+      setGenderErrorMessage('');
+    }
+
+    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+      setEmailError(true);
+      setEmailErrorMessage('Μη έγκυρο email.');
+      isValid = false;
+    } else {
+      setEmailError(false);
+      setEmailErrorMessage('');
+    }
+
+    if (!phoneNumber || phoneNumber.value.length !== 10 || !/^\d+$/.test(phoneNumber.value)) {
+      setPhoneNumberError(true);
+      setPhoneNumberErrorMessage('Το Τηλέφωνο Επικοινωνίας πρέπει να έχει μήκος 10 χαρακτήρες.');
+      isValid = false;
+    } else {
+      setPhoneNumberError(false);
+      setPhoneNumberErrorMessage('');
+    }
+
+    if (!address.value || address.value.length < 1) {
+      setAddressError(true);
+      setAddressErrorMessage('Η Διεύθυνση είναι υποχρεωτική.');
+      isValid = false;
+    } else {
+      setAddressError(false);
+      setAddressErrorMessage('');
+    }
+
+    if (!zip.value || zip.value.length !== 5) {
+      setZipError(true);
+      setZipErrorMessage('Ο Ταχυδρομικός Κώδικας πρέπει να έχει μήκος 5 χαρακτήρες.');
+      isValid = false;
+    } else {
+      setZipError(false);
+      setZipErrorMessage('');
+    }
+
+    if (!afm.value || afm.value.length !== 9) {
+      setAfmError(true);
+      setAfmErrorMessage('Ο ΑΦΜ πρέπει να έχει μήκος 9 χαρακτήρες.');
+      isValid = false;
+    } else {
+      setAfmError(false);
+      setAfmErrorMessage('');
+    }
+
+
+    return isValid;
+  };
+
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateInputs()) return;
+
+    const data = new FormData(event.currentTarget);
+
+    const newOrganizer = {
+      username: data.get('username'),
+      name: data.get('name'),
+      lastName: data.get('lastName'),
+      email: data.get('email'),
+      phoneNumber: data.get('phoneNumber'),
+      address: data.get('address'),
+      zip: data.get('zip'),
+      afm: data.get('afm'),
+      password: data.get('password'),
+      gender: gender,
+    };
+
+    try {
+      const response = await fetch('http://localhost:3001/vet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newVet),
+      });
+
+      if (response.ok) {
+        const savedUser = await response.json();
+        // Use your AuthContext login function
+        login({ name: savedUser.name, role: 'vet', email: savedUser.email });
+        // Navigate to Vet Dashboard
+        navigate('/vet/VetDashboard');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Υπήρξε πρόβλημα κατά την εγγραφή.");
+      }
+    } catch (error) {
+      console.error("Connection Error:", error);
+      alert("Δεν ήταν δυνατή η σύνδεση με τον διακομιστή.");
+    }
+  };
+
+
+
+  return (
+    <AppTheme {...props}>
+      <CssBaseline enableColorScheme />
+
+      <SignUpContainer direction="column" justifyContent="flex-start">
+
+        <Card variant="outlined">
+          <Typography
+            component="h1"
+            variant="h4"
+            sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
+          >
+            Εγγραφή <span style={{ fontSize: '0.6em', fontWeight: 'normal' }}>για Διοργανωτές</span>
+          </Typography>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+          >
+            <FormControl>
+              <FormLabel htmlFor="username">Όνομα Χρήστη</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="username"
+                placeholder="Όνομα Χρήστη"
+                name="username"
+                autoComplete="username"
+                variant="outlined"
+                error={usernameError}
+                helperText={usernameErrorMessage}
+                color={usernameError ? 'error' : 'primary'}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel htmlFor="password">Κωδικός Πρόσβασης</FormLabel>
+              <TextField
+                required
+                fullWidth
+                name="password"
+                placeholder="••••••"
+                id="password"
+                autoComplete="new-password"
+                variant="outlined"
+                type={showPassword ? "text" : "password"}
+                slotProps={{input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}}
+                error={passwordError}
+                helperText={passwordErrorMessage}
+                color={passwordError ? 'error' : 'primary'}
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel htmlFor="pass">Επιβεβαίωση Κωδικού Πρόσβασης</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="pass"
+                placeholder="••••••"
+                name="pass"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="pass"
+                variant="outlined"
+                slotProps={{ input:{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle confirm password visibility"
+                        onClick={handleClickShowConfirmPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),}
+                }}
+                error={passError}
+                helperText={passErrorMessage}
+                color={passError ? 'error' : 'primary'}
+              />
+            </FormControl>
+            <Stack direction="row" spacing={2}>
+            <FormControl fullWidth sx={{ flex: 2 }}>
+              <FormLabel htmlFor="name">Όνομα</FormLabel>
+              <TextField
+                autoComplete="name"
+                name="name"
+                required
+                fullWidth
+                id="name"
+                placeholder="Όνομα"
+                error={nameError}
+                helperText={nameErrorMessage}
+                color={nameError ? 'error' : 'primary'}
+              />
+            </FormControl>
+            <FormControl fullWidth sx={{ flex: 2 }}>
+              <FormLabel htmlFor="email">Επώνυμο</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="lastName"
+                placeholder="Επώνυμο"
+                name="lastName"
+                autoComplete="lastName"
+                variant="outlined"
+                error={lastNameError}
+                helperText={lastNameErrorMessage}
+                color={lastNameError ? 'error' : 'primary'}
+              />
+            </FormControl>
+            <FormControl fullWidth sx={{ flex: 1 }} error={genderError}>
+              <FormLabel htmlFor="gender">Φύλο</FormLabel>
+              <Select
+                displayEmpty
+                required
+                fullWidth
+                id="gender"
+                name="gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                variant="outlined"
+                error={genderError}
+                renderValue={(selected) => {
+                  if (!selected || selected.length === 0) {
+                    return <Typography sx={{ color: 'text.secondary', opacity: 0.7 }}>Επιλέξτε Φύλο</Typography>;
+                  }
+                  if (selected === 'male') return 'Άνδρας';
+                  if (selected === 'female') return 'Γυναίκα';
+                  return 'Άλλο';
+                }}
+              >
+              <MenuItem value="" disabled></MenuItem>
+              <MenuItem value="male">Άνδρας</MenuItem>
+              <MenuItem value="female">Γυναίκα</MenuItem>
+              <MenuItem value="other">Άλλο</MenuItem>
+              </Select>
+              {genderError && <FormHelperText>{genderErrorMessage}</FormHelperText>}
+            </FormControl>
+            </Stack>
+
+            <FormControl>
+              <FormLabel htmlFor="email">Email</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="email"
+                placeholder="your@email.com"
+                name="email"
+                autoComplete="email"
+                variant="outlined"
+                error={emailError}
+                helperText={emailErrorMessage}
+                color={emailError ? 'error' : 'primary'}
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel htmlFor="email">Τηλέφωνο Επικοινωνίας</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="phoneNumber"
+                placeholder="Σταθερό ή Κινητό Τηλέφωνο"
+                name="phoneNumber"
+                autoComplete="phoneNumber"
+                variant="outlined"
+                error={phoneNumberError}
+                helperText={phoneNumberErrorMessage}
+                color={phoneNumberError ? 'error' : 'primary'}
+              />
+            </FormControl>
+
+            <Stack direction="row" spacing={2}>
+            <FormControl fullWidth sx={{ flex: 1 }} error={addressError}>
+              <FormLabel htmlFor="address">Διεύθυνση</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="address"
+                placeholder="Οδός, Αριθμός, Πόλη"
+                name="address"
+                autoComplete="address"
+                variant="outlined"
+                error={addressError}
+                helperText={addressErrorMessage}
+                color={addressError ? 'error' : 'primary'}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel htmlFor="zip">Ταχυδρομικός Κώδικας</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="zip"
+                placeholder="xxxxx"
+                name="zip"
+                autoComplete="zip"
+                variant="outlined"
+                error={zipError}
+                helperText={zipErrorMessage}
+                color={zipError ? 'error' : 'primary'}
+              />
+            </FormControl>
+            </Stack>
+
+            <FormControl>
+              <FormLabel htmlFor="afm">ΑΦΜ</FormLabel>
+              <TextField
+                required
+                fullWidth
+                id="afm"
+                placeholder="xxxxxxxxx"
+                name="afm"
+                autoComplete="afm"
+                variant="outlined"
+                error={afmError}
+                helperText={afmErrorMessage}
+                color={afmError ? 'error' : 'primary'}
+              />
+            </FormControl>
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 4 }}
+          >
+            Εγγραφή
+          </Button>
+
+          </Box>
+          <Divider></Divider>
+            <Typography sx={{ textAlign: 'center' }}>
+              Έχεις ήδη λογαριασμό;{' '}
+              <Link
+                href="/login"
+                variant="body2"
+                sx={{ alignSelf: 'center' }}
+              >
+                Συνδέσου
+              </Link>
+            </Typography>
+        </Card>
+      </SignUpContainer>
+    </AppTheme>
+  );
+}
