@@ -89,6 +89,20 @@ export default function EventSearchPage(props) {
             price: 50,
             quantity: 500,
             available: 500,
+          },
+          {
+            ticketTypeID: 3,
+            name: "Φοιτητικό",
+            price: 10,
+            quantity: 300,
+            available: 3,
+          },
+          {
+            ticketTypeID: 4,
+            name: "Οικογενειακό",
+            price: 40,
+            quantity: 200,
+            available: 0,
           }
         ],
         bookings: [
@@ -99,7 +113,7 @@ export default function EventSearchPage(props) {
             ticketType: 1,
             numberOfTickets: 2,
             totalCost: 30,
-            bookingStatus: "confiermed"
+            bookingStatus: "confirmed"
           }
         ],
         organizerID: 1,
@@ -313,27 +327,6 @@ export default function EventSearchPage(props) {
   }, []); // Empty dependency array ensures this only runs once when the page loads
 
 
-
-
-
-
-
-
-
-
-
-  // const handleSpecialtyChange = (area) => {
-  //   const current = filters.specialties;
-  //   const currentIndex = current.indexOf(area);
-  //   const newSpecialties = [...current];
-  //   if (currentIndex === -1) newSpecialties.push(area);
-  //   else newSpecialties.splice(currentIndex, 1);
-  //   setFilters({ ...filters, specialties: newSpecialties });
-  // };
-
-  // const handleExperienceChange = (e) => setFilters({ ...filters, minExperience: e.target.value });
-  // const handleRatingChange = (event, newValue) => setFilters({ ...filters, minRating: newValue || 0 });
-
   const [priceRange, setPriceRange] = useState([0, 100]);
 
   const handlePriceChange = (event, newValue) => {
@@ -394,94 +387,6 @@ export default function EventSearchPage(props) {
         
           <Grid container spacing={4} justifyContent={!user ? 'center' : 'flex-start'}>
             
-             {/* filters*/}
-            {/* <Grid item xs={12} md={3}>
-              <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 2, boxShadow: 1 }}>
-                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Φίλτρα:</Typography>
-
-                  <Box sx={{ mb: 3 }}>
-                  <Typography fontWeight="bold" sx={{ mb: 1, fontSize: '0.9rem' }}>Περιοχή:</Typography>
-                  {['Αθήνα', 'Θεσσαλονίκη', 'Πάτρα', 'Λάρισα'].map((area) => (
-                      <FormControlLabel 
-                      key={area} 
-                      control={<Checkbox size="small" onChange={() => handleSpecialtyChange(area)} checked={filters.specialties.includes(area)} />} 
-                      label={<Typography variant="body2">{area}</Typography>} 
-                      labelPlacement="end" 
-                      sx={{ width: '100%', mb: 0.5 }} 
-                      />
-                  ))}
-                </Box>
-                <Divider sx={{ mb: 3 }} />
-
-                <Box sx={{ mb: 3 }}>
-                  <Typography fontWeight="bold" sx={{ mb: 1, fontSize: '0.9rem' }}>Ημερομηνία:</Typography>
-                  {['Οποτεδήποτε', 'Σήμερα', 'Αύριο', 'Αυα', 'Συγ'].map((area) => (
-                      <FormControlLabel 
-                      key={area} 
-                      control={<Checkbox size="small" onChange={() => handleSpecialtyChange(area)} checked={filters.specialties.includes(area)} />} 
-                      label={<Typography variant="body2">{area}</Typography>} 
-                      labelPlacement="end" 
-                      sx={{ width: '100%', mb: 0.5 }} 
-                      />
-                  ))}
-                </Box>
-
-                <Divider sx={{ mb: 3 }} />
-
-                <Box sx={{ mb: 3 }}>
-                  <Typography fontWeight="bold" sx={{ mb: 1, fontSize: '0.9rem' }}>Είδος / Κατηγορία:</Typography>
-                  {['Όλες', 'Λαϊκά', 'Έντεχνα', 'Pop', 'Rap', 'Techno'].map((area) => (
-                      <FormControlLabel 
-                      key={area} 
-                      control={<Checkbox size="small" onChange={() => handleSpecialtyChange(area)} checked={filters.specialties.includes(area)} />} 
-                      label={<Typography variant="body2">{area}</Typography>} 
-                      labelPlacement="end" 
-                      sx={{ width: '100%', mb: 0.5 }} 
-                      />
-                  ))}
-                </Box>
-
-                <Divider sx={{ mb: 3 }} />
-
-                {/* <Box sx={{ mb: 3 }}>
-                  <Typography fontWeight="bold" sx={{ mb: 1, fontSize: '0.9rem' }}>Τιμή Εισιτηρίου:</Typography>
-                  {['Όλες', 'Λαϊκά', 'Έντεχνα', 'Pop', 'Rap', 'Techno'].map((area) => (
-                      <FormControlLabel 
-                      key={area} 
-                      control={<Checkbox size="small" onChange={() => handleSpecialtyChange(area)} checked={filters.specialties.includes(area)} />} 
-                      label={<Typography variant="body2">{area}</Typography>} 
-                      labelPlacement="end" 
-                      sx={{ width: '100%', mb: 0.5 }} 
-                      />
-                  ))}
-                </Box> */}
-
-                {/* <Box sx={{ width: '100%', borderRadius: 1 }}>
-                  <Typography gutterBottom fontWeight="bold" color="text.primary">
-                    Τιμή Εισιτηρίου: {priceRange[0]}€ - {priceRange[1]}€+
-                  </Typography>
-  
-                  <Box sx={{ px: 2 }}>
-                    <Slider
-                      value={priceRange}
-                      onChange={handlePriceChange}
-                      valueLabelDisplay="auto" // Shows a small tooltip with the price when dragging
-                      min={0}
-                      max={100} // Change this to the maximum possible ticket price in your app
-                      sx={{
-                        color: '#5ba7fb', // Matches the blue theme from your Avatar
-                        '& .MuiSlider-thumb': {
-                        '&:hover, &.Mui-focusVisible': {
-                        boxShadow: '0px 0px 0px 8px rgb(91 167 251 / 16%)',
-                          },
-                        },
-                      }}
-                    />
-                  </Box>
-                </Box>
-              </Box>
-            </Grid> */}
-
 
 
             {/* filters */}
@@ -592,12 +497,6 @@ export default function EventSearchPage(props) {
             </Grid>
 
 
-
-
-
-
-
-
             {/* results */}
             <Grid item xs={12} md={9}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
@@ -672,7 +571,6 @@ export default function EventSearchPage(props) {
               </Box>
             </Grid>
           </Grid>
-        
         </Box>
       </Box>
     </AppTheme>

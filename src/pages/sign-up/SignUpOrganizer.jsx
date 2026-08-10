@@ -102,25 +102,7 @@ export default function SignUpVet(props) {
     logout();
   }, []);
 
-  // React.useEffect(() => {
-  //   const delayDebounce = setTimeout(async() => {
-  //     // 1. Check your backend here. 
-  //   // Example: const isTaken = await myBackendCheck(username);
-    
-  //   // Let's pretend "admin" and "maria" are already taken in the database
-  //   const isTaken = (username === 'admin' || username === 'maria');
-
-  //   if (isTaken) {
-  //     setUsernameError('Το Όνομα Χρήστη χρησιμοποείται ήδη');
-  //   } else {
-  //     setUsernameError('');
-  //   }
-
-  //   }, 500); // 500ms debounce
-
-  //   return () => clearTimeout(delayDebounce);
-  // }, [username]);
-
+  
   const validateInputs = () => {
     const username = document.getElementById('username');
     const name = document.getElementById('name');

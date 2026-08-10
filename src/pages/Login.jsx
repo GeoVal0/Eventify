@@ -112,54 +112,6 @@ export default function SignIn(props) {
     return isValid;
   };
 
-  // const handleSubmit = async (event) => {
-  //   event.preventDefault();
-  //   setFormError(''); // Clear previous errors
-
-  //   // 1. Run Validation locally first
-  //   if (!validateInputs()) {
-  //     return; // Stop if inputs are invalid
-  //   }
-
-  //   console.log("Attempting login with:", email, password);
-
-  //   try {
-  //     // Define user types and their corresponding dashboard routes
-  //     const userTypes = [
-  //       { type: 'owner', route: '/owner/OwnerDashboard' },
-  //       { type: 'vet', route: '/vet/VetDashboard' }
-  //     ];
-
-  //     // Try to find user in each table
-  //     for (const { type, route } of userTypes) {
-  //       const response = await fetch(`http://localhost:3001/${type}?email=${email}&password=${password}`);
-        
-  //       if (!response.ok) {
-  //         throw new Error("Server not responding");
-  //       }
-
-  //       const data = await response.json();
-
-  //       if (data.length > 0) {
-  //         // User found! Add the role and log them in
-  //         const user = { ...data[0], role: type };
-  //         console.log("User found:", user);
-          
-  //         login(user);
-  //         navigate(route);
-  //         return; // Exit function after successful login
-  //       }
-  //     }
-
-  //     // If we reach here, no user was found in any table
-  //     setFormError('Μη έγκυρο email ή κωδικός πρόσβασης.');
-      
-  //   } catch (err) {
-  //     console.error("Login Error:", err);
-  //     setFormError('Could not connect to the server. Is json-server running?');
-  //   }
-  // };
-
 
   const handleSubmit = async (event) => {
     event.preventDefault();
