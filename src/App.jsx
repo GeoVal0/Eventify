@@ -1,34 +1,3 @@
-// import { Routes, Route } from "react-router-dom";
-// import SignUpOrganizer from './pages/sign-up/SignUpOrganizer.jsx';
-// import SignUpUser from './pages/sign-up/SignUpUser.jsx';
-// import Login from './pages/Login.jsx';
-// import UserList from './pages/admin/UserList.jsx';
-
-
-// function App() {
-//   return (
-//     <div className="app">
-      // <Routes>
-
-      //   <Route path="/sign-up/SignUpOrganizer" element={<SignUpOrganizer />} />
-      //   <Route path="/sign-up/SignUpUser" element={<SignUpUser />} />
-
-      //   <Route path="/login" element={<Login />} />
-
-      //   <Route path="/admin/UserList" element={<UserList />} />
-
-      // </Routes>
-//     </div>
-//   );
-// }
-
-// export default App;
-
-
-
-// src/App.jsx
-
-
 import { Routes, Route } from "react-router-dom";
 import { useState, useEffect } from 'react';
 import { checkServerHealth } from './api';
@@ -39,6 +8,8 @@ import UserList from './pages/admin/UserList.jsx';
 import UserDetails from './pages/admin/UserDetails.jsx';
 import SearchEvents from './pages/search/SearchEvents.jsx';
 import BookTickets from './pages/search/BookTickets.jsx';
+import NewEvent from './pages/organizer/NewEvent.jsx';
+import EventHistory from './pages/organizer/EventHistory.jsx';
 
 function App() {
   const [serverMessage, setServerMessage] = useState("Trying to connect...");
@@ -58,19 +29,6 @@ function App() {
   }, []);
 
   return (
-    // <div style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
-    //   <h1>TED 2026: Frontend meets Backend</h1>
-      
-    //   <div style={{ 
-    //     padding: "1rem", 
-    //     backgroundColor: serverMessage.includes("Welcome") ? "#d4edda" : "#f8d7da",
-    //     borderRadius: "8px",
-    //     marginTop: "1rem"
-    //   }}>
-    //     <p><strong>Backend Status:</strong> {serverMessage}</p>
-    //   </div>
-
-
 
       <Routes>
 
@@ -84,6 +42,10 @@ function App() {
 
         <Route path="search/SearchEvents" element={<SearchEvents />} />
         <Route path="search/BookTickets" element={<BookTickets />} /> 
+
+        <Route path="organizer/NewEvent" element={<NewEvent />} /> 
+        <Route path="organizer/EventHistory" element={<EventHistory />} /> 
+
       </Routes>
     // </div>
 
