@@ -29,10 +29,8 @@ export default function EventHistoryPage(props) {
   
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  
   const [sortOrder, setSortOrder] = useState('newest'); 
   const [statusFilter, setStatusFilter] = useState('all');
-
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null); 
 
@@ -65,7 +63,7 @@ export default function EventHistoryPage(props) {
           },
           {
             id: 3,
-            title: 'Ακυρωμένη Παράσταση',
+            title: 'Ari',
             venue: 'Θέατρο Βράχων',
             date: '2026-08-01',
             time: '19:00',
@@ -110,16 +108,6 @@ export default function EventHistoryPage(props) {
     setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'cancelled' } : e));
   };
 
-  const handleViewTickets = (eventData) => {
-    setSelectedEvent(eventData);
-    setTicketDialogOpen(true);
-  };
-
-  const handleCloseTickets = () => {
-    setTicketDialogOpen(false);
-    setSelectedEvent(null);
-  };
-
   // --- FILTERING & SORTING ---
   const filteredEvents = events
     .filter(e => {
@@ -152,25 +140,25 @@ export default function EventHistoryPage(props) {
 
           {/* Top Filters (Preserved exact layout) */}
           <Box sx={{ width: '100%', maxWidth: '900px', mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                  <FormControl size="small" sx={{ minWidth: 200, bgcolor: 'white', borderRadius: 1 }}>
-                      <InputLabel>Ταξινόμηση</InputLabel>
-                      <Select value={sortOrder} label="Ταξινόμηση" onChange={(e) => setSortOrder(e.target.value)}>
-                          <MenuItem value="newest">Πιο πρόσφατες εκδηλώσεις</MenuItem>
-                          <MenuItem value="oldest">Παλαιότερες εκδηλώσεις</MenuItem>
-                      </Select>
-                  </FormControl>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 200, bgcolor: 'white', borderRadius: 1 }}>
+                <InputLabel>Ταξινόμηση</InputLabel>
+                <Select value={sortOrder} label="Ταξινόμηση" onChange={(e) => setSortOrder(e.target.value)}>
+                  <MenuItem value="newest">Πιο πρόσφατες εκδηλώσεις</MenuItem>
+                  <MenuItem value="oldest">Παλαιότερες εκδηλώσεις</MenuItem>
+                </Select>
+              </FormControl>
 
-                  <FormControl size="small" sx={{ minWidth: 200, bgcolor: 'white', borderRadius: 1 }}>
-                      <InputLabel>Κατάσταση</InputLabel>
-                      <Select value={statusFilter} label="Κατάσταση" onChange={(e) => setStatusFilter(e.target.value)}>
-                          <MenuItem value="all">Όλες</MenuItem>
-                          <MenuItem value="published">Δημοσιευμένες</MenuItem>
-                          <MenuItem value="draft">Προσωρινά Αποθηκευμένες</MenuItem>
-                          <MenuItem value="cancelled">Ακυρωμένες</MenuItem>
-                      </Select>
-                  </FormControl>
-              </Box>
+              <FormControl size="small" sx={{ minWidth: 200, bgcolor: 'white', borderRadius: 1 }}>
+                <InputLabel>Κατάσταση</InputLabel>
+                <Select value={statusFilter} label="Κατάσταση" onChange={(e) => setStatusFilter(e.target.value)}>
+                  <MenuItem value="all">Όλες</MenuItem>
+                  <MenuItem value="published">Δημοσιευμένες</MenuItem>
+                  <MenuItem value="draft">Προσωρινά Αποθηκευμένες</MenuItem>
+                  <MenuItem value="cancelled">Ακυρωμένες</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
           </Box>
 
           {/* Event Cards List */}
@@ -202,10 +190,10 @@ export default function EventHistoryPage(props) {
                          </MapContainer>
                       ) : (
                           <Box sx={{ textAlign: 'center', opacity: 0.6, p: 2 }}>
-                              <LocationOffIcon sx={{ fontSize: 50, color: '#9e9e9e' }} />
-                              <Typography variant="caption" display="block" color="text.secondary">
-                                  Χωρίς Τοποθεσία
-                              </Typography>
+                            <LocationOffIcon sx={{ fontSize: 50, color: '#9e9e9e' }} />
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Χωρίς Τοποθεσία
+                            </Typography>
                           </Box>
                       )}
                     </Box>
@@ -245,131 +233,61 @@ export default function EventHistoryPage(props) {
                     {/* Right Side: Action Buttons (Preserved layout styles) */}
                     <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, minWidth: '200px', alignItems: 'center' }}>
                       
-                      {event.status === 'published' && (
+                      {(event.status === 'published' || event.status === 'draft') && (
                           <>
                               <Button 
-                                  variant="contained" fullWidth
-                                  sx={{ 
-                                    background: 'linear-gradient(to bottom, #2f94f8ff, #0f4d8aff) !important',
-                                    borderRadius: 5, 
-                                    px: 4, py: 1.5, 
-                                    fontWeight: 'bold', 
-                                    color: 'white',
-                                    border: '1px solid #1976d2',
-                                    boxShadow: '0 3px 5px 2px rgba(53, 77, 162, 0.3)',
-                                  }}
-                                  onClick={() => handleViewTickets(event)}
+                                variant="contained" fullWidth
+                                sx={{ 
+                                  background: 'linear-gradient(to bottom, #2f94f8ff, #0f4d8aff) !important',
+                                  borderRadius: 5, 
+                                  px: 4, py: 1.5, 
+                                  fontWeight: 'bold', 
+                                  color: 'white',
+                                  border: '1px solid #1976d2',
+                                  boxShadow: '0 3px 5px 2px rgba(53, 77, 162, 0.3)',
+                                }}
+                                onClick={() => navigate('/organizer/ViewEvent', { state: { event: event } })}
                               >
-                                  ΠΡΟΒΟΛΗ ΕΚΔΗΛΩΣΗΣ
+                              ΠΡΟΒΟΛΗ ΕΚΔΗΛΩΣΗΣ
                               </Button>
                               <Button 
-                                  variant="contained" fullWidth
-                                  sx={{ 
-                                    background: 'linear-gradient(to bottom, #8a8c8aff, #525151ff) !important',
-                                    borderRadius: 5, 
-                                    px: 4, py: 1.5, 
-                                    fontWeight: 'bold', 
-                                    color: 'white',
-                                    border: '1px solid #3e3e3eff',
-                                    boxShadow: '0 3px 5px 2px rgba(47, 52, 47, 0.3)',
-                                  }}
-                                  onClick={() => handleCancelBooking(event.id)}
+                                variant="contained" fullWidth
+                                sx={{ 
+                                  background: 'linear-gradient(to bottom, #8a8c8aff, #525151ff) !important',
+                                  borderRadius: 5, 
+                                  px: 4, py: 1.5, 
+                                  fontWeight: 'bold', 
+                                  color: 'white',
+                                  border: '1px solid #3e3e3eff',
+                                  boxShadow: '0 3px 5px 2px rgba(47, 52, 47, 0.3)',
+                                }}
+                                onClick={() => navigate('/organizer/EditEvent', { state: { event: event } })}
                               >
-                                  ΤΡΟΠΟΠΟΙΗΣΗ ΕΚΔΗΛΩΣΗΣ
+                              ΤΡΟΠΟΠΟΙΗΣΗ ΕΚΔΗΛΩΣΗΣ
                               </Button>
                           </>
                       )}
 
-                      {event.status === 'draft' && (
-                        <>
-                        <Button 
-                                  variant="contained" fullWidth
-                                  sx={{ 
-                                    background: 'linear-gradient(to bottom, #2f94f8ff, #0f4d8aff) !important',
-                                    borderRadius: 5, 
-                                    px: 4, py: 1.5, 
-                                    fontWeight: 'bold', 
-                                    color: 'white',
-                                    border: '1px solid #1976d2',
-                                    boxShadow: '0 3px 5px 2px rgba(53, 77, 162, 0.3)',
-                                  }}
-                                  onClick={() => handleViewTickets(event)}
-                              >
-                                  ΠΡΟΒΟΛΗ ΕΚΔΗΛΩΣΗΣ
-                              </Button>
-
-                              <Button 
-                                  variant="contained" fullWidth
-                                  sx={{ 
-                                    background: 'linear-gradient(to bottom, #8a8c8aff, #525151ff) !important',
-                                    borderRadius: 5, 
-                                    px: 4, py: 1.5, 
-                                    fontWeight: 'bold', 
-                                    color: 'white',
-                                    border: '1px solid #3e3e3eff',
-                                    boxShadow: '0 3px 5px 2px rgba(47, 52, 47, 0.3)',
-                                  }}
-                                  onClick={() => handleCancelBooking(event.id)}
-                              >
-                                  ΤΡΟΠΟΠΟΙΗΣΗ ΕΚΔΗΛΩΣΗΣ
-                              </Button>
-                        
-
-
-                           {/* <Button 
-                              variant="contained" fullWidth
-                              sx={{ 
-                                background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important',
-                                borderRadius: 5, 
-                                px: 4, py: 1.5, 
-                                fontWeight: 'bold', 
-                                color: 'white',
-                                border: '1px solid #2e7d32',
-                                boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
-                              }}
-                          >
-                              ΔΗΜΟΣΙΕΥΣΗ ΕΚΔΗΛΩΣΗΣ
-                          </Button>
-
-                          <Button 
-                              variant="contained" fullWidth
-                              sx={{ 
-                                background: 'linear-gradient(to bottom, rgb(245, 55, 74), rgb(129, 39, 39)) !important',
-                                borderRadius: 5, 
-                                px: 4, py: 1.5, 
-                                fontWeight: 'bold', 
-                                color: 'white',
-                                border: '1px solid #2e7d32',
-                                boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
-                              }}
-                          >
-                              ΔΙΑΓΡΑΦΗ ΕΚΔΗΛΩΣΗΣ
-                          </Button> */}
-                        </>
-                      )}
-
                       {event.status === 'cancelled' && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {/* <Typography variant="h5" color="error.main" fontWeight="bold">✕</Typography>
-                              <Typography variant="body2" color="error.main" fontWeight="bold">ΑΚΥΡΩΘΗΚΕ</Typography> */}
-                              <Button 
-                              variant="contained" fullWidth
-                              sx={{ 
-                                background: 'linear-gradient(to bottom, #2f94f8ff, #0f4d8aff) !important',
-                                borderRadius: 5, 
-                                px: 4, py: 1.5, 
-                                fontWeight: 'bold', 
-                                color: 'white',
-                                border: '1px solid #1976d2',
-                                boxShadow: '0 3px 5px 2px rgba(53, 77, 162, 0.3)',
-                              }}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Button 
+                            variant="contained" fullWidth
+                            sx={{ 
+                              background: 'linear-gradient(to bottom, #2f94f8ff, #0f4d8aff) !important',
+                              borderRadius: 5, 
+                              px: 4, py: 1.5, 
+                              fontWeight: 'bold', 
+                              color: 'white',
+                              border: '1px solid #1976d2',
+                              boxShadow: '0 3px 5px 2px rgba(53, 77, 162, 0.3)',
+                            }}
+                            onClick={() => navigate('/organizer/ViewEvent', { state: { event: event } })}
                           >
-                              ΠΡΟΒΟΛΗ ΕΚΔΗΛΩΣΗΣ
+                          ΠΡΟΒΟΛΗ ΕΚΔΗΛΩΣΗΣ
                           </Button>
-                          </Box>
+                        </Box>
                       )}
                     </Box>
-
                   </CardContent>
                 </Card>
               ))
@@ -377,44 +295,6 @@ export default function EventHistoryPage(props) {
                <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>Δεν βρέθηκε ιστορικό εκδηλώσεων.</Typography>
             )}
           </Box>
-
-          {/* Ticket Details Dialog (Repurposed from Edit Dialog) */}
-          <Dialog 
-            open={ticketDialogOpen} 
-            onClose={handleCloseTickets} 
-            maxWidth="sm" 
-            fullWidth
-            sx={{ '& .MuiDialog-paper': { bgcolor: '#ffffff' } }}
-          >
-            <DialogTitle fontWeight="bold" sx={{ bgcolor: 'white' }}>Τα Εισιτήριά σας</DialogTitle>
-            <DialogContent dividers sx={{ bgcolor: 'white' }}>
-              {selectedEvent && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1, textAlign: 'center' }}>
-                   
-                   <Typography variant="h6" fontWeight="bold">
-                      {selectedEvent.title}
-                   </Typography>
-                   <Typography variant="body1" color="text.secondary">
-                      {selectedEvent.venue} | {selectedEvent.date}
-                   </Typography>
-
-                   <Box sx={{ p: 4, bgcolor: '#f5f5f5', borderRadius: 2, border: '2px dashed #ccc' }}>
-                      <Typography variant="h4" fontWeight="bold" sx={{ letterSpacing: 4 }}>
-                         QR CODE HERE
-                      </Typography>
-                      <Typography variant="body2" sx={{ mt: 2 }}>
-                         Αριθμός Εισιτηρίων: {selectedEvent.ticketsBought}
-                      </Typography>
-                   </Box>
-
-                </Box>
-              )}
-            </DialogContent>
-            <DialogActions sx={{ p: 2, bgcolor: 'white' }}>
-              <Button onClick={handleCloseTickets} variant="contained" color="primary">ΚΛΕΙΣΙΜΟ</Button>
-            </DialogActions>
-          </Dialog>
-
         </Box>
       </Box>
     </AppTheme>

@@ -39,14 +39,14 @@ export default function UserDetails(props) {
     console.log("Accepting user ID:", userId);
     // Here we will eventually add the fetch() call to the FastAPI backend
     alert("Η εγγραφή εγκρίθηκε!");
-    // navigate('/admin/users'); // Go back to the user list
+    navigate('/admin/UserList'); // Go back to the user list
   };
 
   const handleCancel = async (userId) => {
     console.log("Rejecting user ID:", userId);
     // Here we will eventually add the fetch() call to the FastAPI backend
     alert("Η εγγραφή απορρίφθηκε!");
-    // navigate('/admin/users'); // Go back to the user list
+    navigate('/admin/UserList'); // Go back to the user list
   };
 
   if (!userData) return <Typography>Φόρτωση...</Typography>;
@@ -65,7 +65,6 @@ export default function UserDetails(props) {
   return (
     <AppTheme {...props}>
       <Box sx={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', width: '100%' }}>
-        
         <Box 
           sx={{ 
             flex: 1, 
@@ -111,21 +110,32 @@ export default function UserDetails(props) {
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: '200px' }}>
                   <Button 
                     variant="contained" 
-                    color="success" 
                     size="large" 
-                    sx={{ borderRadius: 5, fontWeight: 'bold' }} 
+                    sx={{ 
+                      background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important',
+                      fontWeight: 'bold', 
+                      color: 'white',
+                      border: '1px solid #2e7d32',
+                      boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
+                    }}
                     onClick={() => handleAccept(userData.id)}
-                  >
-                    ΕΓΚΡΙΣΗ ΑΙΤΗΣΗΣ
+                    >
+                    Έγκριση Αίτησης
                   </Button>
                   <Button 
-                    variant="contained" 
-                    color="error" 
-                    size="large" 
-                    sx={{ borderRadius: 5, fontWeight: 'bold' }} 
+                    variant="contained" fullWidth
+                    sx={{ 
+                      background: 'linear-gradient(to bottom, rgb(245, 55, 74), rgb(129, 39, 39)) !important',
+                      // borderRadius: 5, 
+                      px: 4, py: 1.5,
+                      fontWeight: 'bold', 
+                      color: 'white',
+                      boxShadow: '0 3px 5px 2px rgba(129, 39, 39, .3)',
+                      whiteSpace: 'nowrap'
+                    }}
                     onClick={() => handleCancel(userData.id)}
                   >
-                    ΑΠΟΡΡΙΨΗ ΑΙΤΗΣΗΣ
+                  Απόρριψη Αίτησης
                   </Button>
                 </Box>
               )}
@@ -137,7 +147,6 @@ export default function UserDetails(props) {
                  {/* Reserved space for map or extra details */}
               </Grid>
             </Grid>
-            
           </Box>
         </Box>
       </Box>

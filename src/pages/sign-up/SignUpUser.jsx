@@ -113,25 +113,6 @@ export default function SignUpUser(props) {
     logout();
   }, []);
 
-  // React.useEffect(() => {
-  //   const delayDebounce = setTimeout(async() => {
-  //     // 1. Check your backend here. 
-  //   // Example: const isTaken = await myBackendCheck(username);
-    
-  //   // Let's pretend "admin" and "maria" are already taken in the database
-  //   const isTaken = (username === 'admin' || username === 'maria');
-
-  //   if (isTaken) {
-  //     setUsernameError('Το Όνομα Χρήστη χρησιμοποείται ήδη');
-  //   } else {
-  //     setUsernameError('');
-  //   }
-
-  //   }, 500); // 500ms debounce
-
-  //   return () => clearTimeout(delayDebounce);
-  // }, [username]);
-
   const validateInputs = () => {
     const username = document.getElementById('username');
     const name = document.getElementById('name');
@@ -146,6 +127,7 @@ export default function SignUpUser(props) {
 
     let isValid = true;
 
+    // ERROR MESSAGES FOR ALL FIELDS WHEN EMPTY
     if (!username.value || username.value.length < 1){
       setUsernameError(true);
       setUsernameErrorMessage('Το Όνομα Χρήστη είναι υποχρεωτικό.');
@@ -157,7 +139,7 @@ export default function SignUpUser(props) {
 
     if (!password.value || password.value.length < 8) {
       setPasswordError(true);
-      setPasswordErrorMessage('Ο κωδικός πρέπει να έχει μήκος τουλάχιστον 8 χαρακτήρες.');
+      setPasswordErrorMessage('Ο Κωδικός Πρόσβασης πρέπει να έχει μήκος τουλάχιστον 8 χαρακτήρες.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -245,7 +227,6 @@ export default function SignUpUser(props) {
       setAfmErrorMessage('');
     }
 
-
     return isValid;
   };
 
@@ -299,8 +280,6 @@ const handleSubmit = async (event) => {
     }
   };
 
-
-
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
@@ -323,7 +302,6 @@ const handleSubmit = async (event) => {
             <FormControl>
               <FormLabel htmlFor="username">Όνομα Χρήστη</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="username"
                 placeholder="Όνομα Χρήστη"
@@ -338,7 +316,6 @@ const handleSubmit = async (event) => {
             <FormControl>
               <FormLabel htmlFor="password">Κωδικός Πρόσβασης</FormLabel>
               <TextField
-                required
                 fullWidth
                 name="password"
                 placeholder="••••••"
@@ -369,7 +346,6 @@ const handleSubmit = async (event) => {
             <FormControl>
               <FormLabel htmlFor="pass">Επιβεβαίωση Κωδικού Πρόσβασης</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="pass"
                 placeholder="••••••"
@@ -402,7 +378,6 @@ const handleSubmit = async (event) => {
               <TextField
                 autoComplete="name"
                 name="name"
-                required
                 fullWidth
                 id="name"
                 placeholder="Όνομα"
@@ -414,7 +389,6 @@ const handleSubmit = async (event) => {
             <FormControl fullWidth sx={{ flex: 2 }}>
               <FormLabel htmlFor="email">Επώνυμο</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="lastName"
                 placeholder="Επώνυμο"
@@ -430,7 +404,6 @@ const handleSubmit = async (event) => {
               <FormLabel htmlFor="gender">Φύλο</FormLabel>
               <Select
                 displayEmpty
-                required
                 fullWidth
                 id="gender"
                 name="gender"
@@ -459,7 +432,6 @@ const handleSubmit = async (event) => {
             <FormControl>
               <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="email"
                 placeholder="your@email.com"
@@ -475,7 +447,6 @@ const handleSubmit = async (event) => {
             <FormControl>
               <FormLabel htmlFor="email">Τηλέφωνο Επικοινωνίας</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="phoneNumber"
                 placeholder="Σταθερό ή Κινητό Τηλέφωνο"
@@ -492,7 +463,6 @@ const handleSubmit = async (event) => {
             <FormControl fullWidth sx={{ flex: 1 }} error={addressError}>
               <FormLabel htmlFor="address">Διεύθυνση</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="address"
                 placeholder="Οδός, Αριθμός, Πόλη"
@@ -507,7 +477,6 @@ const handleSubmit = async (event) => {
             <FormControl>
               <FormLabel htmlFor="zip">Ταχυδρομικός Κώδικας</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="zip"
                 placeholder="xxxxx"
@@ -524,7 +493,6 @@ const handleSubmit = async (event) => {
             <FormControl>
               <FormLabel htmlFor="afm">ΑΦΜ</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="afm"
                 placeholder="xxxxxxxxx"
@@ -561,26 +529,26 @@ const handleSubmit = async (event) => {
         </Card>
       </SignUpContainer>
       {/* Pop-up Παράθυρο Αναμονής Έγκρισης */}
-<Dialog
-  open={openDialog}
-  onClose={handleCloseDialog}
-  aria-labelledby="alert-dialog-title"
-  aria-describedby="alert-dialog-description"
->
-  <DialogTitle id="alert-dialog-title">
-    {"Η Εγγραφή ήταν Επιτυχής!"}
-  </DialogTitle>
-  <DialogContent>
-    <DialogContentText id="alert-dialog-description">
-      Η αίτηση εγγραφής σας ολοκληρώθηκε με επιτυχία. Εκκρεμεί η έγκριση της αίτησης εγγραφής στην εφαρμογή από τον διαχειριστή. Μόλις εγκριθεί, θα μπορείτε να συνδεθείτε με τα στοιχεία σας.
-    </DialogContentText>
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={handleCloseDialog} autoFocus variant="contained">
-      Επιστροφή στην Αρχική Σελίδα
-    </Button>
-  </DialogActions>
-</Dialog>
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Η Εγγραφή ήταν Επιτυχής!"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Η αίτηση εγγραφής σας ολοκληρώθηκε με επιτυχία. Εκκρεμεί η έγκριση της αίτησης εγγραφής στην εφαρμογή από τον διαχειριστή. Μόλις εγκριθεί, θα μπορείτε να συνδεθείτε με τα στοιχεία σας.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} autoFocus variant="contained">
+            Επιστροφή στην Αρχική Σελίδα
+          </Button>
+        </DialogActions>
+      </Dialog>
     </AppTheme>
   );
 }

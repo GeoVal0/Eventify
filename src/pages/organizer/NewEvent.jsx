@@ -40,7 +40,6 @@ function LocationMarker({ position, setPosition }) {
   );
 }
 
-// Preserved exactly from your original layout layout[cite: 3]
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -52,7 +51,6 @@ const Card = styled(MuiCard)(({ theme }) => ({
   [theme.breakpoints.up("sm")]: { width: "700px" },
 }));
 
-// Preserved exactly from your original layout[cite: 3]
 const EditContainer = styled(Stack)(({ theme }) => ({
   minHeight: "100dvh",
   padding: theme.spacing(2),
@@ -72,7 +70,6 @@ const EditContainer = styled(Stack)(({ theme }) => ({
 export default function CreateEvent() {
   const navigate = useNavigate();
 
-  // Event Form States
   const [title, setTitle] = React.useState("");
   const [titleError, setTitleError] = React.useState(false);
   const [titleErrorMessage, setTitleErrorMessage] = React.useState('');
@@ -103,7 +100,7 @@ export default function CreateEvent() {
   const [address, setAddress] = React.useState("");
   const [addressError, setAddressError] = React.useState(false);
   const [addressErrorMessage, setAddressErrorMessage] = React.useState('');
-  const [country, setCoountry] = React.useState("");
+  const [country, setCountry] = React.useState("");
   const [countryError, setCountryError] = React.useState(false);
   const [countryErrorMessage, setCountryErrorMessage] = React.useState('');
   const [description, setDescription] = React.useState("");
@@ -112,24 +109,8 @@ export default function CreateEvent() {
   const [capacity, setCapacity] = React.useState("");
   const [capacityError, setCapacityError] = React.useState(false);
   const [capacityErrorMessage, setCapacityErrorMessage] = React.useState('');
-  // const [price, setPrice] = React.useState("");
-  // const [priceError, setPriceError] = React.useState(false);
-  // const [priceErrorMessage, setPriceErrorMessage] = React.useState('');
-  // const [quantity, setQuantity] = React.useState("");
-  // const [quantityError, setQuantityError] = React.useState(false);
-  // const [quantityErrorMessage, setQuantityErrorMessage] = React.useState('');
-  // const [ticketType, setTicketType] = React.useState("");
-  // const [ticketTypeError, setTicketTypeError] = React.useState(false);
-  // const [ticketTypeErrorMessage, setTicketTypeErrorMessage] = React.useState('');
   const [position, setPosition] = React.useState({ lat: 37.97601, lng: 23.72750 }); // For map marker position
-  // const [position, setPosition] = React.useState('');
-
-
-
-
-  const [tickets, setTickets] = React.useState([
-    { type: '', price: '', quantity: '' } // Starts with one empty ticket form
-  ]);
+  const [tickets, setTickets] = React.useState([{ type: '', price: '', quantity: '' } ]);
   const [ticketsError, setTicketsError] = React.useState(false);
   const [ticketsErrorMessage, setTicketsErrorMessage] = React.useState('');
 
@@ -151,15 +132,12 @@ export default function CreateEvent() {
     setTickets(newTickets);
   };
 
-
-
-
   const handleSave = async (e) => {
     e.preventDefault();
     
     let isValid = true;
 
-    // 1. Validate Title directly from state
+    // ERROR MESSAGES FOR ALL FIELDS WHEN EMPTY
     if (!title || title.length < 1){
       setTitleError(true);
       setTitleErrorMessage('Ο Τίτλος είναι υποχρεωτικός.');
@@ -187,7 +165,6 @@ export default function CreateEvent() {
       setEventTypeErrorMessage('');
     }
 
-    // 2. Validate Venue
     if (!venue || venue.length < 1){
       setVenueError(true);
       setVenueErrorMessage('Ο Χώρος Διεξαγωγής είναι υποχρεωτικός.');
@@ -197,7 +174,6 @@ export default function CreateEvent() {
       setVenueErrorMessage('');
     }
 
-    // 3. Validate City
     if (!city || city.length < 1){
       setCityError(true);
       setCityErrorMessage('Η Πόλη είναι υποχρεωτική.');
@@ -207,7 +183,6 @@ export default function CreateEvent() {
       setCityErrorMessage('');
     }
 
-    // 4. Validate Address
     if (!address || address.length < 1){
       setAddressError(true);
       setAddressErrorMessage('Η Διεύθυνση είναι υποχρεωτική.');
@@ -217,7 +192,6 @@ export default function CreateEvent() {
       setAddressErrorMessage('');
     }
 
-    // 5. Validate Country
     if (!country || country.length < 1){
       setCountryError(true);
       setCountryErrorMessage('Η Χώρα είναι υποχρεωτική.');
@@ -254,7 +228,6 @@ export default function CreateEvent() {
       setEndTimeErrorMessage('');
     }
 
-    // 6. Validate Description
     if (!description || description.length < 1){
       setDescriptionError(true);
       setDescriptionErrorMessage('Η Περιγραφή είναι υποχρεωτική.');
@@ -264,7 +237,6 @@ export default function CreateEvent() {
       setDescriptionErrorMessage('');
     }
 
-    // 7. Validate Capacity
     if (!capacity || capacity.length < 1){
       setCapacityError(true);
       setCapacityErrorMessage('Η Χωρητικότητα είναι υποχρεωτική.');
@@ -274,40 +246,6 @@ export default function CreateEvent() {
       setCapacityErrorMessage('');
     }
 
-    // 8. Validate Price
-    // if (!price || price.length < 1){  
-    //   setPriceError(true);
-    //   setPriceErrorMessage('Η Τιμή είναι υποχρεωτική.');
-    //   isValid = false;
-    // } else {
-    //   setPriceError(false);
-    //   setPriceErrorMessage('');
-    // }
-
-    // // 9. Validate Quantity
-    // if (!quantity || quantity.length < 1){
-    //   setQuantityError(true);
-    //   setQuantityErrorMessage('Η Ποσότητα είναι υποχρεωτική.');
-    //   isValid = false;
-    // } else {
-    //   setQuantityError(false);
-    //   setQuantityErrorMessage('');
-    // }
-
-    // // 10. Validate Ticket Type
-    // if (!ticketType || ticketType.length < 1){
-    //   setTicketTypeError(true);
-    //   setTicketTypeErrorMessage('Ο Τύπος Εισιτηρίου είναι υποχρεωτικός.');
-    //   isValid = false;
-    // } else {
-    //   setTicketTypeError(false);
-    //   setTicketTypeErrorMessage('');
-    // }
-
-
-
-
-    // Validate Tickets Array
     let hasTicketError = false;
     if (tickets.length === 0) {
       hasTicketError = true;
@@ -328,26 +266,10 @@ export default function CreateEvent() {
       setTicketsErrorMessage('');
     }
 
-
-
-
-
-
-
-
     // If any validation failed, STOP here. Do not save.
     if (!isValid) {
       return;
     }
-
-    // If everything is valid, proceed with saving!
-    // try {
-    //   console.log("Saving new event:", {
-    //     title, category, date, startTime, endTime, venue, city, country, address, description, capacity, ticketType, price, quantity,
-    //     latitude: position.lat, longitude: position.lng
-    //   });
-
-
 
     try {
       console.log("Saving new event:", {
@@ -355,14 +277,8 @@ export default function CreateEvent() {
         latitude: position.lat, longitude: position.lng
       });
 
-
-
-
-
-
-      
       alert("Η εκδήλωση δημιουργήθηκε επιτυχώς!");
-      navigate("/owner/OwnerDashboard");
+      navigate("/organizer/EventHistory");
       
     } catch (err) {
       console.error(err);
@@ -374,7 +290,8 @@ export default function CreateEvent() {
     <AppTheme>
       <CssBaseline enableColorScheme />
       <EditContainer direction="column" justifyContent="flex-start">
-        <Card variant="outlined" sx={{ 
+        <Card variant="outlined" 
+          sx={{ 
             backgroundColor: 'white',
             borderColor: '#ddd'
           }}>
@@ -459,8 +376,6 @@ export default function CreateEvent() {
                   helperText={venueErrorMessage}
                 />
               </FormControl>
-
-              
             </Stack>
 
             {/* Row 4: Full Address */}
@@ -481,26 +396,26 @@ export default function CreateEvent() {
                 <FormControl fullWidth>
                     <FormLabel htmlFor="city">Πόλη</FormLabel>
                     <TextField 
-                        id="city" 
-                        fullWidth 
-                        value={city} 
-                        onChange={(e) => setCity(e.target.value)}
-                        placeholder="π.χ. Μαρούσι" 
-                        error={cityError}
-                        helperText={cityErrorMessage}
+                      id="city" 
+                      fullWidth 
+                      value={city} 
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="π.χ. Μαρούσι" 
+                      error={cityError}
+                      helperText={cityErrorMessage}
                     />
                 </FormControl>
 
                 <FormControl fullWidth>
                     <FormLabel htmlFor="country">Χώρα</FormLabel>
                     <TextField 
-                        id="country" 
-                        fullWidth 
-                        value={country} 
-                        onChange={(e) => setCountry(e.target.value)}
-                        placeholder="π.χ. Ελλάδα" 
-                        error={countryError}
-                        helperText={countryErrorMessage}
+                      id="country" 
+                      fullWidth 
+                      value={country} 
+                      onChange={(e) => setCountry(e.target.value)}
+                      placeholder="π.χ. Ελλάδα" 
+                      error={countryError}
+                      helperText={countryErrorMessage}
                     />
                 </FormControl>
             </Stack>
@@ -570,9 +485,6 @@ export default function CreateEvent() {
               </FormControl>
             </Stack>
 
-            {/* Row 3: Venue and City */}
-            
-
             {/* Row 5: Description */}
             <FormControl fullWidth>
               <FormLabel htmlFor="description">Περιγραφή</FormLabel>
@@ -580,7 +492,6 @@ export default function CreateEvent() {
                 id="description" 
                 fullWidth 
                 multiline
-                // rows={4}
                 value={description} 
                 onChange={(e) => setDescription(e.target.value)} 
                 placeholder="Περιγραφή εκδήλωσης"
@@ -601,55 +512,6 @@ export default function CreateEvent() {
                 helperText={capacityErrorMessage}
               />
             </FormControl>
-
-            {/* <FormControl fullWidth>
-              <FormLabel htmlFor="ticketType">Τύπος Εισιτηρίου</FormLabel>
-              <TextField 
-                id="ticketType" 
-                fullWidth 
-                value={ticketType} 
-                onChange={(e) => setTicketType(e.target.value)} 
-                placeholder=" "
-                error={ticketTypeError}
-                helperText={ticketTypeErrorMessage}
-              />
-            </FormControl> */}
-
-            {/* Row 6: Ticket Info */}
-            {/* <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <FormControl fullWidth>
-                <FormLabel htmlFor="price">Τιμή Εισιτηρίου (€)</FormLabel>
-                <TextField
-                  id="price"
-                  type="number"
-                  fullWidth
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="π.χ. 15"
-                  error={priceError}
-                  helperText={priceErrorMessage}
-                />
-              </FormControl>
-
-              <FormControl fullWidth>
-                <FormLabel htmlFor="quantity">Συνολικά Εισιτήρια</FormLabel>
-                <TextField
-                  id="quantity"
-                  type="number"
-                  fullWidth
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="π.χ. 1500"
-                  error={quantityError}
-                  helperText={quantityErrorMessage}
-                />
-              </FormControl>
-            </Stack> */}
-
-
-
-
-
 
             {/* --- DYNAMIC TICKETS SECTION --- */}
             <FormControl fullWidth error={ticketsError}>
@@ -714,29 +576,20 @@ export default function CreateEvent() {
               {ticketsError && <FormHelperText >{ticketsErrorMessage}</FormHelperText>}
             </FormControl>
 
-
-
-
-
-
-
-
-
             {/* Action Buttons */}
             <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Button type="submit" variant="contained" size="large">
-                Δημιουργια Εκδηλωσης
+                Δημιουργία Εκδήλωσης
               </Button>
 
               <Button
                 type="button"
                 variant="outlined"
-                onClick={() => navigate("/owner/OwnerDashboard")}
+                onClick={() => navigate("/organizer/EventHistory")}   //????
               >
-                Ακυρωση
+                Ακύρωση
               </Button>
             </Box>
-
           </Box>
         </Card>
       </EditContainer>

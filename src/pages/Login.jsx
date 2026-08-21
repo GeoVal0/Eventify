@@ -221,7 +221,6 @@ export default function SignIn(props) {
                 placeholder="your@email.com"
                 autoComplete="email"
                 autoFocus
-                required
                 fullWidth
                 variant="outlined"
                 value={email}
@@ -238,7 +237,6 @@ export default function SignIn(props) {
                 placeholder="••••••"
                 id="password"
                 autoComplete="current-password"
-                required
                 fullWidth
                 variant="outlined"
                 value={password}
@@ -263,12 +261,6 @@ export default function SignIn(props) {
                 color={passwordError ? 'error' : 'primary'}
               />
             </FormControl>
-            
-            {/* <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Κράτησέ με συνδεδεμένο"
-            /> */}
-            
             <Button
               type="submit"
               fullWidth
@@ -279,7 +271,6 @@ export default function SignIn(props) {
             
           </Box>
           <Divider />
-
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, alignItems: 'center', mt: 3 }}>
             <Typography sx={{ textAlign: 'center', fontWeight: 'bold' }}>
@@ -301,7 +292,6 @@ export default function SignIn(props) {
             >
               Εγγραφείτε ως Διοργανωτής
             </Link>
-
           </Box>
         </Card>
       </SignInContainer>

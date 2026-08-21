@@ -26,6 +26,8 @@ export default function ApplicationHistoryPage(props) {
   const [selectedAppt, setSelectedAppt] = useState(null); 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [userData, setUserData] = useState('');
+  
 
 
 
@@ -97,7 +99,6 @@ export default function ApplicationHistoryPage(props) {
     fetchMockData();
   }, []); // Αφαιρέσαμε και το [user] από εδώ για να τρέξει σίγουρα μία φορά!
 
-  
 
   const getStatusLabel = (status) => {
     switch (status) {
@@ -115,6 +116,20 @@ export default function ApplicationHistoryPage(props) {
       case 'rejected': return 'error.main';
       default: return 'text.primary';
     }
+  };
+
+   const handleAccept = async (userId) => {
+    console.log("Accepting user ID:", userId);
+    // Here we will eventually add the fetch() call to the FastAPI backend
+    alert("Η εγγραφή εγκρίθηκε!");
+    navigate('/admin/UserList'); // Go back to the user list
+  };
+
+  const handleCancel = async (userId) => {
+    console.log("Rejecting user ID:", userId);
+    // Here we will eventually add the fetch() call to the FastAPI backend
+    alert("Η εγγραφή απορρίφθηκε!");
+    navigate('/admin/UserList'); // Go back to the user list
   };
 
   // date format
@@ -161,9 +176,6 @@ export default function ApplicationHistoryPage(props) {
   return (
     <AppTheme {...props}>
       <Box sx={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', width: '100%' }}>
-        
-       
-
         <Box 
           sx={{ 
             flex: 1, 
@@ -210,8 +222,6 @@ export default function ApplicationHistoryPage(props) {
                     variant="outlined" 
                     sx={{ borderRadius: 4, bgcolor: 'white', border: '1px solid #c7c7c7', boxShadow: 'none' }}
                   >
-                
-
 
                     <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', p: 3, gap: 3 }}>
                       <Avatar variant="rounded" sx={{ width: 80, height: 80, bgcolor: '#5ba7fb', borderRadius: 2 }}>
@@ -243,11 +253,34 @@ export default function ApplicationHistoryPage(props) {
                       {/* Action Buttons (Only show when pending) */}
                       {app.status === 'pending' && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <Button variant="contained" color="success" size="small" sx={{ borderRadius: 5, textTransform: 'none', fontWeight: 'bold' }} onClick={() => handleAccept(app.id)}>
-                            ΕΓΚΡΙΣΗ ΑΙΤΗΣΗΣ
+                          <Button 
+                            variant="contained" 
+                            size="large" 
+                            sx={{ 
+                              background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important',
+                              fontWeight: 'bold', 
+                              color: 'white',
+                              border: '1px solid #2e7d32',
+                              boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
+                            }}
+                            onClick={() => handleAccept(userData.id)}
+                            >
+                            Έγκριση Αίτησης
                           </Button>
-                          <Button variant="contained" color="error" size="small" sx={{ borderRadius: 5, textTransform: 'none', fontWeight: 'bold' }} onClick={() => handleCancel(app.id)}>
-                            ΑΠΟΡΡΙΨΗ ΑΙΤΗΣΗΣ
+                          <Button 
+                            variant="contained" fullWidth
+                            sx={{ 
+                              background: 'linear-gradient(to bottom, rgb(245, 55, 74), rgb(129, 39, 39)) !important',
+                              // borderRadius: 5, 
+                              px: 4, py: 1.5,
+                              fontWeight: 'bold', 
+                              color: 'white',
+                              boxShadow: '0 3px 5px 2px rgba(129, 39, 39, .3)',
+                              whiteSpace: 'nowrap'
+                            }}
+                            onClick={() => handleCancel(userData.id)}
+                          >
+                          Απόρριψη Αίτησης
                           </Button>
                         </Box>
                       )}

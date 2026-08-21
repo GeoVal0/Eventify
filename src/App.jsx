@@ -10,6 +10,8 @@ import SearchEvents from './pages/search/SearchEvents.jsx';
 import BookTickets from './pages/search/BookTickets.jsx';
 import NewEvent from './pages/organizer/NewEvent.jsx';
 import EventHistory from './pages/organizer/EventHistory.jsx';
+import EditEvent from './pages/organizer/EditEvent.jsx';
+import ViewEvent from './pages/organizer/ViewEvent.jsx';
 
 function App() {
   const [serverMessage, setServerMessage] = useState("Trying to connect...");
@@ -45,7 +47,8 @@ function App() {
 
         <Route path="organizer/NewEvent" element={<NewEvent />} /> 
         <Route path="organizer/EventHistory" element={<EventHistory />} /> 
-
+        <Route path="organizer/EditEvent" element={<EditEvent />} /> 
+        <Route path="organizer/ViewEvent" element={<ViewEvent />} />
       </Routes>
     // </div>
 

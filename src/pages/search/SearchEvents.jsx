@@ -37,10 +37,8 @@ export default function EventSearchPage(props) {
   const { user } = useAuth();
 
   const [events, setEvents] = useState([]);
-
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [searchArea, setSearchArea] = useState('');
   const [filters, setFilters] = useState({
@@ -59,7 +57,6 @@ export default function EventSearchPage(props) {
 
   // get data
   useEffect(() => {
-    // Fake Event Data to test the UI
     const dummyEvents = [
       {
         id: 1,
@@ -353,9 +350,7 @@ export default function EventSearchPage(props) {
     return matchesSearch && matchesPrice && matchesArea && matchesCategory;
   });
 
-
 // const startingPrice = Math.min(...event.ticketTypes.map(ticket => ticket.price));
-
 
   const buttonStyle = {
     background: 'linear-gradient(to bottom, #2f94f8ff, #0f4d8aff) !important',
@@ -386,9 +381,6 @@ export default function EventSearchPage(props) {
         >
         
           <Grid container spacing={4} justifyContent={!user ? 'center' : 'flex-start'}>
-            
-
-
             {/* filters */}
             <Grid item xs={12} md={3} sx={{ minWidth: 0 }}> {/* minWidth: 0 strictly forces the Grid not to stretch */}
               <Box sx={{ 
@@ -425,19 +417,18 @@ export default function EventSearchPage(props) {
                     InputProps={{ endAdornment: (<InputAdornment position="end"><SearchIcon color="action" /></InputAdornment>) }}
                   />
                 </Box>
-                </Box>
+              </Box>
                 
-                <Divider sx={{ mb: 3 }} />
-
+              <Divider sx={{ mb: 3 }} />
                 <Box sx={{ mb: 3 }}>
                   <Typography fontWeight="bold" sx={{ mb: 1, fontSize: '0.9rem' }}>Ημερομηνία:</Typography>
                   {['Οποτεδήποτε', 'Σήμερα', 'Αύριο', 'Αυτή την εβδομάδα', 'Συγκεκριμένο διάστημα', 'ελευθερη εισαγωγη'].map((area) => (
                       <FormControlLabel 
-                      key={area} 
-                      control={<Checkbox size="small"  />} 
-                      label={<Typography variant="body2">{area}</Typography>} 
-                      labelPlacement="end" 
-                      sx={{ mb: 0.5, display: 'flex' }} 
+                        key={area} 
+                        control={<Checkbox size="small"  />} 
+                        label={<Typography variant="body2">{area}</Typography>} 
+                        labelPlacement="end" 
+                        sx={{ mb: 0.5, display: 'flex' }} 
                       />
                   ))}
                 </Box>
@@ -456,16 +447,15 @@ export default function EventSearchPage(props) {
                       />
                   ))}
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexGrow: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                  <TextField 
-                    placeholder="Αναζήτηση είδους..." 
-                    variant="outlined"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    sx={{ width: '200px', '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: 5, height: '40px' } }}
-                    InputProps={{ endAdornment: (<InputAdornment position="end"><SearchIcon color="action" /></InputAdornment>) }}
-                  />
-                </Box>
-                  
+                    <TextField 
+                      placeholder="Αναζήτηση είδους..." 
+                      variant="outlined"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      sx={{ width: '200px', '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: 5, height: '40px' } }}
+                      InputProps={{ endAdornment: (<InputAdornment position="end"><SearchIcon color="action" /></InputAdornment>) }}
+                    />
+                  </Box> 
                 </Box>
 
                 <Divider sx={{ mb: 3 }} />
@@ -496,7 +486,6 @@ export default function EventSearchPage(props) {
               </Box>
             </Grid>
 
-
             {/* results */}
             <Grid item xs={12} md={9}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
@@ -510,8 +499,6 @@ export default function EventSearchPage(props) {
                     sx={{ width: { xs: '100%', sm: '500px' }, '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: 5, height: '40px' } }}
                     InputProps={{ endAdornment: (<InputAdornment position="end"><SearchIcon color="action" /></InputAdornment>) }}
                   />
-                  
-                  
                 </Box>
               </Box>
 

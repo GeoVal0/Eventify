@@ -117,6 +117,7 @@ export default function SignUpVet(props) {
 
     let isValid = true;
 
+    // ERROR MESSAGES FOR ALL FIELDS WHEN EMPTY
     if (!username.value || username.value.length < 1){
       setUsernameError(true);
       setUsernameErrorMessage('Το Όνομα Χρήστη είναι υποχρεωτικό.');
@@ -128,7 +129,7 @@ export default function SignUpVet(props) {
 
     if (!password.value || password.value.length < 8) {
       setPasswordError(true);
-      setPasswordErrorMessage('Ο κωδικός πρέπει να έχει μήκος τουλάχιστον 8 χαρακτήρες.');
+      setPasswordErrorMessage('Ο Κωδικός Πρόσβασης πρέπει να έχει μήκος τουλάχιστον 8 χαρακτήρες.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -216,7 +217,6 @@ export default function SignUpVet(props) {
       setAfmErrorMessage('');
     }
 
-
     return isValid;
   };
 
@@ -265,8 +265,6 @@ export default function SignUpVet(props) {
     }
   };
 
-
-
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
@@ -289,7 +287,6 @@ export default function SignUpVet(props) {
             <FormControl>
               <FormLabel htmlFor="username">Όνομα Χρήστη</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="username"
                 placeholder="Όνομα Χρήστη"
@@ -304,7 +301,6 @@ export default function SignUpVet(props) {
             <FormControl>
               <FormLabel htmlFor="password">Κωδικός Πρόσβασης</FormLabel>
               <TextField
-                required
                 fullWidth
                 name="password"
                 placeholder="••••••"
@@ -335,7 +331,6 @@ export default function SignUpVet(props) {
             <FormControl>
               <FormLabel htmlFor="pass">Επιβεβαίωση Κωδικού Πρόσβασης</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="pass"
                 placeholder="••••••"
@@ -368,7 +363,6 @@ export default function SignUpVet(props) {
               <TextField
                 autoComplete="name"
                 name="name"
-                required
                 fullWidth
                 id="name"
                 placeholder="Όνομα"
@@ -380,7 +374,6 @@ export default function SignUpVet(props) {
             <FormControl fullWidth sx={{ flex: 2 }}>
               <FormLabel htmlFor="email">Επώνυμο</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="lastName"
                 placeholder="Επώνυμο"
@@ -396,7 +389,6 @@ export default function SignUpVet(props) {
               <FormLabel htmlFor="gender">Φύλο</FormLabel>
               <Select
                 displayEmpty
-                required
                 fullWidth
                 id="gender"
                 name="gender"
@@ -425,7 +417,6 @@ export default function SignUpVet(props) {
             <FormControl>
               <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="email"
                 placeholder="your@email.com"
@@ -441,7 +432,6 @@ export default function SignUpVet(props) {
             <FormControl>
               <FormLabel htmlFor="email">Τηλέφωνο Επικοινωνίας</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="phoneNumber"
                 placeholder="Σταθερό ή Κινητό Τηλέφωνο"
@@ -458,7 +448,6 @@ export default function SignUpVet(props) {
             <FormControl fullWidth sx={{ flex: 1 }} error={addressError}>
               <FormLabel htmlFor="address">Διεύθυνση</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="address"
                 placeholder="Οδός, Αριθμός, Πόλη"
@@ -473,7 +462,6 @@ export default function SignUpVet(props) {
             <FormControl>
               <FormLabel htmlFor="zip">Ταχυδρομικός Κώδικας</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="zip"
                 placeholder="xxxxx"
@@ -490,7 +478,6 @@ export default function SignUpVet(props) {
             <FormControl>
               <FormLabel htmlFor="afm">ΑΦΜ</FormLabel>
               <TextField
-                required
                 fullWidth
                 id="afm"
                 placeholder="xxxxxxxxx"
@@ -515,7 +502,7 @@ export default function SignUpVet(props) {
           </Box>
           <Divider></Divider>
             <Typography sx={{ textAlign: 'center' }}>
-              Έχεις ήδη λογαριασμό;{' '}
+              Έχεις ήδη λογαριασμό;{' '}                        // thelei kai o organizer egkrisi?????
               <Link
                 href="/login"
                 variant="body2"
