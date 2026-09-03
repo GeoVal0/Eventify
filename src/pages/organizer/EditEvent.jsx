@@ -14,10 +14,12 @@ import { styled } from "@mui/material/styles";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import AppTheme from "../../shared-theme/AppTheme";
-import { useNavigate, useParams } from "react-router-dom";
+import Alert from "@mui/material/Alert";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { getEventDetail, updateEvent } from "../../api";
 
 
 const customIcon = new L.Icon({
@@ -72,7 +74,10 @@ const EditContainer = styled(Stack)(({ theme }) => ({
 
 export default function EditEvent() {
   const navigate = useNavigate();
-  const {eventID} = useParams(); // Get the event ID from the URL
+  // const {eventID} = useParams(); // Get the event ID from the URL
+  const location = useLocation();
+  const eventId = location.state?.eventId;
+  const [apiError, setApiError] = React.useState(''); // For showing backend errors
   const [loading, setLoading] = React.useState(true);
 
   // Event Form States
@@ -116,70 +121,72 @@ export default function EditEvent() {
   const [capacityError, setCapacityError] = React.useState(false);
   const [capacityErrorMessage, setCapacityErrorMessage] = React.useState('');
   const [position, setPosition] = React.useState({ lat: 37.97601, lng: 23.72750 }); // For map marker position
-  const [tickets, setTickets] = React.useState([{ type: '', price: '', quantity: '' }]);    //starts from one empty ticket form
+  // const [tickets, setTickets] = React.useState([{ type: '', price: '', quantity: '' }]);    //starts from one empty ticket form
+  const [tickets, setTickets] = React.useState([]);
   const [ticketsError, setTicketsError] = React.useState(false);
   const [ticketsErrorMessage, setTicketsErrorMessage] = React.useState('');
 
   React.useEffect(() => {
+    if (!eventId){
+      navigate('/organizer/EventHistory');
+      return;
+    }
+
     const fetchEventData = async () => {
-        try {
-        // Replace this setTimeout block with your actual axios/fetch call using eventId
-        // const response = await axios.get(`/api/events/${eventId}`);
-        // const data = response.data;
+      try {
+        const data = await getEventDetail(eventId);
+
+        setTitle(data.title);
+        setCategory(data.categories?.[0] || ""); // Backend uses an array, UI uses a string
+        setEventType(data.event_type);
+        setVenue(data.venue);
+        setCity(data.city);
+        setAddress(data.address);
+        setCountry(data.country);
+        setDescription(data.description);
+        setCapacity(data.capacity?.toString() || "");
         
-        setTimeout(() => {
-          const mockData = {
-            title: "Συναυλία Νίκος Οικονομόπουλος",
-            category: "music",
-            eventType: "music",
-            venue: "OAKA",
-            city: "Μαρούσι",
-            address: "Λεωφόρος Σπύρου Λούη 1",
-            country: "Ελλάδα",
-            date: "2026-09-15",
-            startTime: "21:00",
-            endTime: "23:30",
-            description: "Μια μεγάλη συναυλία στο ΟΑΚΑ.",
-            capacity: "15000",
-            position: { lat: 38.0371, lng: 23.7840 },
-            tickets: [
-              { type: 'Γενική Είσοδος', price: '15', quantity: '10000' },
-              { type: 'VIP', price: '50', quantity: '500' }
-            ]
-          };
+        if (data.latitude && data.longitude) {
+            setPosition({ lat: data.latitude, lng: data.longitude });
+        }
 
-          // Populate State
-          setTitle(mockData.title);
-          setCategory(mockData.category);
-          setEventType(mockData.eventType);
-          setVenue(mockData.venue);
-          setCity(mockData.city);
-          setAddress(mockData.address);
-          setCountry(mockData.country);
-          setDate(mockData.date);
-          setStartTime(mockData.startTime);
-          setEndTime(mockData.endTime);
-          setDescription(mockData.description);
-          setCapacity(mockData.capacity);
-          setPosition(mockData.position);
-          setTickets(mockData.tickets);
-          
-          setLoading(false);
-        }, 600);
+        // Split "YYYY-MM-DDTHH:MM:SS" into date and time fields
+        if (data.start_datetime) {
+            const [d, t] = data.start_datetime.split('T');
+            setDate(d);
+            setStartTime(t.substring(0, 5)); // Get just HH:MM
+        }
+        if (data.end_datetime) {
+            const t = data.end_datetime.split('T')[1];
+            if(t) setEndTime(t.substring(0, 5));
+        }
 
+        if (data.ticket_types && data.ticket_types.length > 0) {
+            setTickets(data.ticket_types.map(t => ({
+                // id: t.ticket_type_id || t.id, 
+                id: t.ticket_type_id ?? t.id ?? null,
+                type: t.name,
+                price: t.price?.toString() || "",
+                quantity: t.quantity?.toString() || ""
+            })));
+        } else {
+            setTickets([{ id: null, type: '', price: '', quantity: '' }]);
+        }
+
+        setLoading(false);
       } catch (err) {
         console.error("Failed to load event data:", err);
         alert("Αδυναμία φόρτωσης εκδήλωσης.");
-        navigate("/owner/OwnerDashboard");
+        navigate("/organizer/EventHistory");
       }
     };
 
     fetchEventData();
-}, [eventID, navigate]);
+}, [eventId, navigate]);
 
   // Helper 1: Add a new blank ticket to the list
   const handleAddTicket = () => {
-    setTickets([...tickets, { type: '', price: '', quantity: '' }]);
+    setTickets([...tickets, { id: null, type: '', price: '', quantity: '' }]);
   };
 
   // Helper 2: Remove a specific ticket from the list
@@ -330,22 +337,54 @@ export default function EditEvent() {
     }
 
     // If any validation failed, STOP here. Do not save.
-    if (!isValid) {
+    if (!isValid)
       return;
-    }
+    
+    const payload = {
+      title: title,
+      event_type: eventType,
+      categories: [category], 
+      venue: venue,
+      city: city,
+      address: address,
+      country: country,
+      latitude: position.lat,
+      longitude: position.lng,
+      start_datetime: `${date}T${startTime}:00`, 
+      // end_datetime: `${date}T${endTime}:00`,
+      end_datetime: endTime ? `${date}T${endTime}:00` : null,
+      capacity: parseInt(capacity, 10),
+      description: description,
+      ticket_types: tickets.map(t => {
+        const baseTicket = {
+          name: t.type,
+          price: parseFloat(t.price),
+          quantity: parseInt(t.quantity, 10)
+        };
+        // if (t.id) baseTicket.ticket_type_id = t.id;
+        if (t.id !== null && t.id !== undefined && t.id !== "") {
+    baseTicket.ticket_type_id = t.id;
+}
+        return baseTicket;
+        // id: t.ticket_type_id,
+        // name: t.type, 
+        // price: parseFloat(t.price),
+        // quantity: parseInt(t.quantity, 10)
+      })
+    };
+
+    console.log("SENDING PAYLOAD:", payload);
 
     try {
-      console.log("Updating event:", {
-        title, category, date, startTime, endTime, venue, city, country, address, description, capacity, tickets,
-        latitude: position.lat, longitude: position.lng
-      });
-
+      setApiError(''); // Reset errors
+      await updateEvent(eventId, payload);
+      
       alert("Οι αλλαγές αποθηκεύτηκαν επιτυχώς!");
-      navigate("/organizer/EventHistory");          //event history or view event?
+      navigate("/organizer/EventHistory"); 
       
     } catch (err) {
       console.error(err);
-      alert("Σφάλμα κατά την αποθήκευση των αλλαγών.");
+      setApiError(err.message); // Show backend validation errors on screen
     }
   };
 
@@ -379,6 +418,11 @@ export default function EditEvent() {
             noValidate
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
+            {apiError && (
+              <Alert severity="error" sx={{ mb: 2}}>
+                {apiError}
+              </Alert>
+            )}
             {/* Row 1: Title and Category */}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <FormControl fullWidth required>

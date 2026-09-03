@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Box, Typography, Button, Avatar, Grid, Card, Select, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle
+  Box, Typography, Button, Avatar, Grid, Card, Select, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress
 } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
 import AppTheme from '../../shared-theme/AppTheme';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext'; 
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { createBooking, getEventDetail } from '../../api'; 
 
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -20,17 +20,33 @@ const customIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-
 export default function BookTickets(props) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth(); 
 
-  // 1. Capture the exact event the user clicked on from the Search Page!
   const event = location.state?.event;
 
+  const [fullEvent, setFullEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [selectedTickets, setSelectedTickets] = useState({});
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
+  useEffect(() => {
+    if (!event) return;
+
+    const fetchFullData = async () => {
+      try {
+        const data = await getEventDetail(event.event_id || event.id);
+        setFullEvent(data);
+      } catch (error) {
+        console.error("Failed to load full event data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFullData();
+  }, [event]);
 
   const handleBooking = () => {
     if (!user){
@@ -41,25 +57,38 @@ export default function BookTickets(props) {
     }
   }
 
-  const handleConfirm = () => {
-    setOpenConfirmDialog(false);
+const handleConfirm = async () => {
+    const requestedTickets = Object.entries(selectedTickets)
+      .filter(([id, quantity]) => quantity > 0)
+      .map(([id, quantity]) => ({
+        ticket_type_id: id,
+        number_of_tickets: quantity
+      }));
+
+    try {
+      for (const ticket of requestedTickets) {
+        const payload = {
+          ticket_type_id: ticket.ticket_type_id,
+          number_of_tickets: ticket.number_of_tickets
+        };
+        await createBooking(fullEvent.event_id, payload);
+      }
+      
+      alert("Η κράτηση ολοκληρώθηκε επιτυχώς!");
+      setOpenConfirmDialog(false);
+      // navigate('/user/UserDashboard'); 
+      
+    } catch (error) {
+      console.error("Booking error:", error);
+      alert(`Σφάλμα: ${error.message}`);
+      setOpenConfirmDialog(false);
+    }
   }
 
-  // --- Admin Action Handlers ---
-  const handleAccept = async (userId) => {
-    console.log("Accepting user ID:", userId);
-    alert("Η εγγραφή εγκρίθηκε!");
-  };
-
-  const handleCancel = async (userId) => {
-    console.log("Rejecting user ID:", userId);
-    alert("Η εγγραφή απορρίφθηκε!");
-  };
-
-  const handleTicketsChange = (ticketTypeID, quantity) => {
+  const handleTicketsChange = (ticket_type_id, quantity) => {
     setSelectedTickets(prev => ({
       ...prev,
-      [ticketTypeID]: quantity
+      [ticket_type_id]: quantity
     }));
   }
 
@@ -69,7 +98,6 @@ export default function BookTickets(props) {
     return '#4caf50';
   }
 
-  // 2. Safety check: If someone refreshes the page and the event gets lost, show an error
   if (!event) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
@@ -81,14 +109,27 @@ export default function BookTickets(props) {
     );
   }
 
-  const latitude = event.geoLocation?.latitude ? parseFloat(event.geoLocation.latitude) : 37.9838; // Default to Athens
-  const longitude = event.geoLocation?.longitude ? parseFloat(event.geoLocation.longitude) : 23.7275; // Default to Athens
+  if (loading || !fullEvent) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const latitude = fullEvent?.latitude ? parseFloat(fullEvent.latitude) : 37.9838;
+  const longitude = fullEvent?.longitude ? parseFloat(fullEvent.longitude) : 23.7275; 
   const position = [latitude, longitude];
 
-  const grandtotal = event.ticketTypes ? event.ticketTypes.reduce((total, ticket) => {
-    const selectedQuantity = selectedTickets[ticket.ticketTypeID] || 0;
+  const grandtotal = fullEvent.ticket_types ? fullEvent.ticket_types.reduce((total, ticket) => {
+    const selectedQuantity = selectedTickets[ticket.ticket_type_id] || 0;
     return total + (selectedQuantity * ticket.price);
   }, 0) : 0;
+
+  const eventDateObj = new Date(fullEvent.start_datetime);
+  const formattedDate = !isNaN(eventDateObj) ? eventDateObj.toLocaleString('el-GR', { 
+    dateStyle: 'short', timeStyle: 'short' 
+  }) : '';
 
   const cardStyle = {
     bgcolor: 'white', 
@@ -136,28 +177,26 @@ export default function BookTickets(props) {
             }}>
               
             <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', flexDirection: { xs: 'column', sm: 'row' }}}>
-              <Avatar variant="rounded" sx={{ width: 160, height: 160, bgcolor: '#5ba7fb', borderRadius: 2 }}>
-                <PersonIcon sx={{ fontSize: 80, color: 'white' }} />
+              <Avatar variant="rounded" sx={{ width: 160, height: 160, bgcolor: '#e3f2fd', color: '#1976d2', borderRadius: 2, fontSize: '4rem', fontWeight: 'bold' }}>
+                {fullEvent.title ? fullEvent.title.charAt(0).toUpperCase() : 'E'}
               </Avatar>
                 
               <Box>
-                <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>{event.title}</Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{event.venue}</Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{event.address}, {event.city}</Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{new Date(event.startDateTime).toLocaleString('el-GR')}</Typography>
+                <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>{fullEvent.title}</Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{fullEvent.venue}</Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{fullEvent.address}, {fullEvent.city}</Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{formattedDate}</Typography>
               </Box>
             </Box>
           </Box>
 
-            {/* <Grid container spacing={6} justifyContent="flex-end">
-              <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>  */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mt: 4 }}>
-            <Box sx={{ width: '600px' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mt: 4, flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
+            <Box sx={{ flex: 1 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Περιγραφή Εκδήλωσης: </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>{event.description}</Typography>
+              <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>{fullEvent.description}</Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', width: '400px' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: '400px' } }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Τοποθεσία Εκδήλωσης:</Typography>
               <Box sx={{ height: '200px', width: '400px', borderRadius: 2, overflow: 'hidden', border: '1px solid #ddd' }}>
                 <MapContainer center={position} zoom={15} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
@@ -167,22 +206,20 @@ export default function BookTickets(props) {
                   />
                   <Marker position={position} icon={customIcon}>
                     <Popup>
-                      {event.title} <br /> {event.address}, {event.city}
+                      {fullEvent.title} <br /> {fullEvent.address}, {fullEvent.city}
                     </Popup>
                   </Marker>
                 </MapContainer>
               </Box> 
             </Box>
           </Box>
-                {/* 2. Bottom Section: Tickets (Spans the full width below the map and description) */}
           <Box sx={{ width: '100%', mt: 6, pt: 4, borderTop: '1px solid #eee' }}>
             <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>Εισιτήρια:</Typography>
             
-            {/* Check if ticket types exist before mapping */}
-            {event.ticketTypes && event.ticketTypes.length > 0 ? (
+            {fullEvent.ticket_types && fullEvent.ticket_types.length > 0 ? (
               <Grid container spacing={3}>
-                {event.ticketTypes.map((ticket) => (
-                  <Grid item xs={12} sm={6} md={4} key={ticket.ticketTypeID}>
+                {fullEvent.ticket_types.map((ticket) => (
+                  <Grid item xs={12} sm={6} md={4} key={ticket.ticket_type_id}>
                     <Card 
                       variant="outlined" 
                       sx={{ 
@@ -197,12 +234,10 @@ export default function BookTickets(props) {
                         bgcolor: 'white',
                       }}
                     >
-                      {/* Ticket Info */}
                       <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="h6" fontWeight="bold">{ticket.name}</Typography>
                         <Typography variant="h4" fontWeight="bold" sx={{ color: '#1976d2', mt: 1, mb: 1 }}>{ticket.price}€</Typography>
                         
-                        {/* Dynamic Availability Text */}
                         <Typography 
                           variant="body2" 
                           fontWeight="bold"
@@ -211,33 +246,38 @@ export default function BookTickets(props) {
                           {ticket.available === 0 && (
                             <Typography variant="body2" color="error.main" fontWeight="bold">Sold Out</Typography>
                           )}
+                           {/* {ticket.available === 0 ? "Sold Out" : `${ticket.available} διαθέσιμα`} */}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ mt: 3, width: '100%', display: 'flex', alignItems: 'center' }}>
+                      {/* <Box sx={{ mt: 3, width: '100%', display: 'flex', alignItems: 'center' }}> */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1}}>
                           <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ mb: 1 }}>Ποσότητα: </Typography>
                             <Select
-                              value={selectedTickets[ticket.ticketTypeID] || 0}
-                              onChange={(e) => handleTicketsChange(ticket.ticketTypeID, e.target.value)}
-                              sx={{ mt: 2, mb: 2, width: '40%' }}
+                              value={selectedTickets[ticket.ticket_type_id] || 0}
+                              onChange={(e) => handleTicketsChange(ticket.ticket_type_id, e.target.value)}
+                              // sx={{ mt: 2, mb: 2, minWidth: '40%' }}
+                              sx={{ minWidth: '70px', height: '35px' }}
                               disabled={ticket.available === 0}
                             >
+                              {/* {[...Array(Math.min(11, ticket.available + 1)).keys()].map(num => (
+                                <MenuItem key={num} value={num}>{num}</MenuItem>
+                              ))} */}
                               <MenuItem value={0}>0</MenuItem>
-                              <MenuItem value={1}>1</MenuItem>
-                              <MenuItem value={2}>2</MenuItem>
-                              <MenuItem value={3}>3</MenuItem>
-                              <MenuItem value={4}>4</MenuItem>
-                              <MenuItem value={5}>5</MenuItem>
-                              <MenuItem value={6}>6</MenuItem>
-                              <MenuItem value={7}>7</MenuItem>
-                              <MenuItem value={8}>8</MenuItem>
-                              <MenuItem value={9}>9</MenuItem>
-                              <MenuItem value={10}>10</MenuItem>
+                               <MenuItem value={1}>1</MenuItem>
+                               <MenuItem value={2}>2</MenuItem>
+                               <MenuItem value={3}>3</MenuItem>
+                               <MenuItem value={4}>4</MenuItem>
+                               <MenuItem value={5}>5</MenuItem>
+                               <MenuItem value={6}>6</MenuItem>
+                               <MenuItem value={7}>7</MenuItem>
+                               <MenuItem value={8}>8</MenuItem>
+                               <MenuItem value={9}>9</MenuItem>
+                               <MenuItem value={10}>10</MenuItem>
                             </Select>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ mb: 1 }}>Σύνολο: {(selectedTickets[ticket.ticketTypeID] || 0) * ticket.price}€</Typography>
+                        {/* </Box> */}
                       </Box>
+                      <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ mt: 1 }}>Σύνολο: {(selectedTickets[ticket.ticket_type_id] || 0) * ticket.price}€</Typography>
                     </Card>
                   </Grid>
                 ))}
@@ -247,7 +287,7 @@ export default function BookTickets(props) {
               )}
           </Box>
             <Typography variant="h5" sx={{ alignSelf: 'center' }}> Σύνολο: {grandtotal}€</Typography>
-            <Button variant="contained" sx={{ ...buttonStyle, borderRadius: 1, alignSelf: 'center' }} onClick={handleBooking}>
+            <Button variant="contained" sx={{ ...buttonStyle, borderRadius: 1, alignSelf: 'center' }} onClick={handleBooking} disabled={grandtotal === 0}>
               ΚΡΑΤΗΣΗ ΕΙΣΙΤΗΡΙΩΝ
             </Button>
             
@@ -256,7 +296,7 @@ export default function BookTickets(props) {
               <DialogContent>
                 <DialogContentText>
                   Είστε σίγουροι ότι θέλετε να προχωρήσετε με την κράτηση των επιλεγμένων εισιτηρίων;
-                  Συνολικό Κόστος: {grandtotal}€
+                  Συνολικό Κόστος: <b>{grandtotal}</b>€
                 </DialogContentText>
               </DialogContent>
               <DialogActions sx={{ p: 2 }}>

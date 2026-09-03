@@ -17,7 +17,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
-import OutlinedInput from '@mui/material/OutlinedInput';
+// import OutlinedInput from '@mui/material/OutlinedInput';
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
@@ -103,9 +103,10 @@ export default function SignUpUser(props) {
   const handleClickShowPassword = () => setShowPassword(!showPassword);
   const handleMouseDownPassword = (event) => event.preventDefault();
   const handleClickShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    navigate('/login');
+    navigate('/home');
   };
 
   // Log out any existing user when visiting signup page
@@ -242,21 +243,25 @@ const handleSubmit = async (event) => {
     const newUser = {
       username: data.get('username'),
       password: data.get('password'),
+      confirm_password: data.get('pass'),
       first_name: data.get('name'),         // Mapped from 'name'
       last_name: data.get('lastName'),      // Mapped from 'lastName'
       email: data.get('email'),
       phone: data.get('phoneNumber'),       // Mapped from 'phoneNumber'
       // Combine address and zip into a single address string since backend schema has one address field
       address: `${data.get('address')}, ${data.get('zip')}`, 
+      city: "",
+      country: "",
       afm: data.get('afm'),
       // Geolocation is optional in backend, so we leave it null for now
       latitude: null,
-      longitude: null 
+      longitude: null ,
+      role: "ATTENDEE"
     };
 
     try {
       // Send POST request to FastAPI. Notice the ?role=ORGANIZER query parameter!
-      const response = await fetch('http://localhost:8000/api/auth/register?role=ORGANIZER', {
+      const response = await fetch('http://localhost:8000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -272,7 +277,12 @@ const handleSubmit = async (event) => {
       } else {
         // Handle validation errors from FastAPI (e.g., username already exists)
         const errorData = await response.json();
-        alert(errorData.detail || "Υπήρξε πρόβλημα κατά την εγγραφή.");
+        // 4. FastAPI 422 errors put details in an array. This prints exactly what field is failing.
+        const errorMessage = typeof errorData.detail === 'string' 
+            ? errorData.detail 
+            : JSON.stringify(errorData.detail);
+        alert(`Αποτυχία εγγραφής: ${errorMessage}`);
+        // alert(errorData.detail || "Υπήρξε πρόβλημα κατά την εγγραφή.");
       }
     } catch (error) {
       console.error("Connection Error:", error);

@@ -15,6 +15,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { getEventDetail, getEventBookings, cancelEvent, deleteEvent, notifyCancellation } from '../../api';
 
 // Setup Map Icon
 const customIcon = new L.Icon({
@@ -30,69 +31,40 @@ const customIcon = new L.Icon({
 export default function ViewEvent(props) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth(); 
-
-  // --- MOCK DATA: The Event Details (Top Section) ---
-  const fallbackEvent = {
-    id: 1,
-    title: 'Συναυλία Νίκος Οικονομόπουλος',
-    venue: 'OAKA',
-    address: 'Λεωφόρος Σπύρου Λούη 1, Μαρούσι',
-    date: '2026-09-15',
-    time: '21:00',
-    status: 'published',
-    ticketsBought: 350,
-    position: { lat: 38.0371, lng: 23.7840 }
-  };
-  
-  const initialEvent = location.state?.event || fallbackEvent; 
-  const [event, setEvent] = useState(initialEvent);
+  const { user } = useAuth();
+  const eventId = location.state?.eventId;   
+  // const initialEvent = location.state?.event || fallbackEvent; 
+  const [event, setEvent] = useState('null');
+  const [bookedUsers, setBookedUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = React.useState(false);
   const [openCancelDialog, setCancelOpenDialog] = React.useState(false);
 
-  // --- MOCK DATA: The Users who booked (Bottom Section) ---
-  const bookedUsers = [
-    {
-      id: 101,
-      username: "giorgos.papadopoulos",
-      name: "Γιώργος",
-      lastName: "Παπαδόπουλος",
-      email: "giorgos.p@email.com",
-      address: "Αριστοτέλους 15, Αθήνα",
-      phone: "6999999991",
-      ticketType: "VIP",
-      quantity: 2,
-      bookingDate: "2026-08-10"
-    },
-    {
-      id: 102,
-      username: "maria.konstantinou",
-      name: "Μαρία",
-      lastName: "Κωνσταντίνου",
-      email: "maria.k@email.com",
-      address: "Λεωφόρος Αθηνών 10, Αθήνα",
-      phone: "6999999992",
-      ticketType: "Γενική Είσοδος",
-      quantity: 4,
-      bookingDate: "2026-08-12"
-    },
-    {
-      id: 103,
-      username: "kostas.anastasiou",
-      name: "Κώστας",
-      lastName: "Αναστασίου",
-      email: "kostas.a@email.com",
-      address: "Πλατεία Συντάγματος 5, Αθήνα",
-      phone: "6999999993",
-      ticketType: "Γενική Είσοδος",
-      quantity: 1,
-      bookingDate: "2026-08-15"
-    }
-  ];
 
   useEffect(() => {
-    if (!initialEvent) navigate('/owner/OwnerDashboard'); 
-  }, [initialEvent, navigate]);
+    if (!eventId) {
+      navigate('/organizer/EventHistory')
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const [eventData, bookingsData] = await Promise.all([
+          getEventDetail(eventId), //[cite: 5]
+          getEventBookings(eventId) //[cite: 5]
+        ]);
+        setEvent(eventData);
+        setBookedUsers(bookingsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Αδυναμία φόρτωσης εκδήλωσης.");
+        navigate('/organizer/EventHistory');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [eventId, navigate]);
 
   // Helpers
   const hasValidLocation = (pos) => {
@@ -101,15 +73,20 @@ export default function ViewEvent(props) {
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'published': return 'ΔΗΜΟΣΙΕΥΜΕΝΗ';
-      case 'draft': return 'ΠΡΟΣΩΡΙΝΑ ΑΠΟΘΗΚΕΥΜΕΝΗ';
-      case 'cancelled': return 'ΑΚΥΡΩΜΕΝΗ';
+      case 'PUBLISHED': return 'ΔΗΜΟΣΙΕΥΜΕΝΗ';
+      case 'DRAFT': return 'ΠΡΟΣΩΡΙΝΑ ΑΠΟΘΗΚΕΥΜΕΝΗ';
+      case 'CANCELLED': return 'ΑΚΥΡΩΜΕΝΗ';
       default: return status ? status.toUpperCase() : 'ΑΓΝΩΣΤΗ';
     }
   };
 
-  const handleContactUser = (email) => {
-    window.location.href = `mailto:${email}`;
+  const formatDateTime = (isoString) => {
+    const d = new Date(isoString);
+    if (isNaN(d)) return { date: 'Άγνωστο', time: '' };
+    return {
+      date: d.toLocaleDateString('el-GR'),
+      time: d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' })
+    };
   };
 
   const handleOpenDialog = () => setOpenDialog(true);
@@ -117,20 +94,38 @@ export default function ViewEvent(props) {
   const handleCancelOpenDialog = () => setCancelOpenDialog(true);
   const handleCancelCloseDialog = () => setCancelOpenDialog(false);
 
-  const handleCancel = (eventID) => {
+  const handleCancel = async () => {
     setCancelOpenDialog(false);
-    setEvent({...event, status: 'cancelled'})
-    // alert("Η εκδήλωση ακυρώθηκε");
+    try {
+      await cancelEvent(event.event_id); //[cite: 5]
+      // Confirmed against main.py: there's a dedicated backend endpoint for
+      // this (POST /api/events/{event_id}/notify-cancellation). It finds
+      // every distinct attendee for the event and messages them server-side
+      // -- no need to fetch bookedUsers and loop sendMessage per person
+      // ourselves, and no guessing about which field on a booking record
+      // is the right recipient id.
+      const result = await notifyCancellation(event.event_id);
+      alert(`Η εκδήλωση ακυρώθηκε επιτυχώς και ειδοποιήθηκαν ${result?.notified ?? 0} συμμετέχοντες.`);
+      navigate('/organizer/EventHistory');
+    } catch (error) {
+      alert(`Σφάλμα κατά την ακύρωση: ${error.message}`);
+    }
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setOpenDialog(false);
-    setEvent({...event, status: 'deleted'})
-    // alert("Η εκδήλωση διαγράφηκε");
-    // navigate('/organizer/ViewEvent')
+    try {
+      await deleteEvent(event.event_id); //[cite: 5]
+      alert("Η εκδήλωση διαγράφηκε επιτυχώς");
+      navigate('/organizer/EventHistory');
+    } catch (error) {
+      alert(`Σφάλμα κατά τη διαγραφή: ${error.message}`); // Will catch "Cannot delete published event with bookings"[cite: 5]
+    }
   }
 
-  if (!event) return <Typography>Φόρτωση...</Typography>;
+  if (loading || !event) return <Typography>Φόρτωση...</Typography>;
+
+  const { date, time } = formatDateTime(event.start_datetime);
 
   return (
     <AppTheme {...props}>
@@ -190,16 +185,16 @@ export default function ViewEvent(props) {
                         {event.title}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        Χώρος: {event.venue}
+                        Χώρος: {event.venue}, {event.address}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Ημερομηνία: {event.date}
+                        Ημερομηνία: {date}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Ώρα: {event.time}
+                        Ώρα: {time}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Αριθμός Κρατήσεων: {event.ticketsBought}
+                        Αριθμός Κρατήσεων: {event.total_booked}
                       </Typography>
 
                       <Typography 
@@ -207,7 +202,7 @@ export default function ViewEvent(props) {
                         fontWeight="bold" 
                         sx={{ 
                           mt: 2, 
-                          color: event.status === 'published' ? 'primary.main' : event.status === 'draft' ? 'warning.main' : 'error.main' 
+                          color: event.status === 'PUBLISHED' ? 'primary.main' : event.status === 'DRAFT' ? 'warning.main' : 'error.main' 
                         }}
                       >
                         ΚΑΤΑΣΤΑΣΗ: {getStatusLabel(event.status)}
@@ -262,7 +257,7 @@ export default function ViewEvent(props) {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box>
                       <Typography variant="caption" color="text.secondary" fontWeight="bold">ΣΥΝΟΛΙΚΕΣ ΚΡΑΤΗΣΕΙΣ</Typography>
-                      <Typography variant="h5" fontWeight="bold" color="primary.main">{event.ticketsBought} Εισιτήρια</Typography>
+                      <Typography variant="h5" fontWeight="bold" color="primary.main">{event.total_booked} Εισιτήρια</Typography>
                     </Box>
                   </Box>
                 </Box>
@@ -279,7 +274,7 @@ export default function ViewEvent(props) {
               {bookedUsers.length > 0 ? (
                 bookedUsers.map((bookedUser) => (
                   <Card 
-                    key={bookedUser.id} 
+                    key={bookedUser.booking_id} 
                     variant="outlined" 
                     sx={{ 
                       borderRadius: 3, bgcolor: 'white', border: '1px solid #e0e0e0', 
@@ -293,25 +288,25 @@ export default function ViewEvent(props) {
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="h6" fontWeight="bold" sx={{ color: 'black' }}>
-                        {bookedUser.username}
+                        {bookedUser.attendee_username}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {bookedUser.name} {bookedUser.lastName}
+                        {bookedUser.attendee_first_name} {bookedUser.attendee_last_name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {bookedUser.address || 'Διεύθυνση -'}
+                        {bookedUser.attendee_address || 'Διεύθυνση -'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {bookedUser.email}
+                        {bookedUser.attendee_email}
                       </Typography>
                     </Box>
                   </CardContent>
 
                     {/* Ticket Info */}
                     <Box sx={{ textAlign: { xs: 'center', sm: 'right' }, borderLeft: { xs: 'none', sm: '1px solid #eee' }, pl: { xs: 0, sm: 3 } }}>
-                      <Typography variant="caption" color="text.secondary" display="block">ΚΑΤΗΓΟΡΙΑ: {bookedUser.ticketType}</Typography>
+                      <Typography variant="caption" color="text.secondary" display="block">ΚΑΤΗΓΟΡΙΑ: {bookedUser.ticket_type_name}</Typography>
                       <Typography variant="h6" fontWeight="bold" color="primary.main">
-                        {bookedUser.quantity} {bookedUser.quantity === 1 ? 'Εισιτήριο' : 'Εισιτήρια'}
+                        {bookedUser.number_of_tickets} {bookedUser.number_of_tickets === 1 ? 'Εισιτήριο' : 'Εισιτήρια'}
                       </Typography>
                     </Box>
 
@@ -321,9 +316,14 @@ export default function ViewEvent(props) {
                         variant="outlined" 
                         size="small" 
                         sx={{ borderRadius: 5, fontWeight: 'bold' }}
-                        onClick={() => handleContactUser(bookedUser.email)}
+                        onClick={() => navigate('/messages', {
+                          state: {
+                            prefillEventId: bookedUser.event_id,
+                            prefillAttendeeId: bookedUser.attendee_id,
+                          }
+                        })}
                       >
-                        ΕΠΙΚΟΙΝΩΝΙΑ
+                        ΜΗΝΥΜΑ
                       </Button>
                     </Box>
                   </Card>

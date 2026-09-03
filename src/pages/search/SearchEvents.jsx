@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, Button, Grid, Card, CardContent, 
-  TextField, Checkbox, FormControlLabel, Radio, RadioGroup, 
-  Rating, Avatar, InputAdornment, Divider, Select, MenuItem, FormControl, InputLabel
+  TextField, Checkbox, FormControlLabel, 
+   Avatar, InputAdornment, Divider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import PersonIcon from '@mui/icons-material/Person';
+// import PersonIcon from '@mui/icons-material/Person';
 import AppTheme from '../../shared-theme/AppTheme';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Slider from '@mui/material/Slider';
+import { getEvents } from '../../api'; // Adjust path based on your folder structure
 
 const getWeekKey = (dateObj) => {
   const d = new Date(dateObj);
@@ -55,276 +56,24 @@ export default function EventSearchPage(props) {
   };
 
 
+
   // get data
   useEffect(() => {
-    const dummyEvents = [
-      {
-        id: 1,
-        title: "Νίκος Οικονομόπουλος",
-        category: "Μουσική",
-        eventType: "Συναυλία",
-        venue: "Θέατρο Πόλης",
-        address: "Αριστοτέλους 15",
-        city: "Αθήνα",
-        country: "Ελλάδα",
-        geoLocation: { latitude: "37.9838", longitude: "23.7275" },
-        startDateTime: "2024-09-15T20:00:00",
-        endDateTime: "2024-09-15T23:00:00",
-        capacity: 800,
-        price: 25,
-        ticketTypes: [
-          {
-            ticketTypeID: 1,
-            name: "Γενική Είσοδος",
-            price: 15,
-            quantity: 1500,
-            available: 1500,
-          },
-          {
-            ticketTypeID: 2,
-            name: "VIP",
-            price: 50,
-            quantity: 500,
-            available: 500,
-          },
-          {
-            ticketTypeID: 3,
-            name: "Φοιτητικό",
-            price: 10,
-            quantity: 300,
-            available: 3,
-          },
-          {
-            ticketTypeID: 4,
-            name: "Οικογενειακό",
-            price: 40,
-            quantity: 200,
-            available: 0,
-          }
-        ],
-        bookings: [
-          {
-            bookingID: 1,
-            attendeeID: 1,
-            time:"2024-09-13T20:00:00",
-            ticketType: 1,
-            numberOfTickets: 2,
-            totalCost: 30,
-            bookingStatus: "confirmed"
-          }
-        ],
-        organizerID: 1,
-        status: "published",
-        description: "Ο Νίκος Οικονομόπουλος είναι ένας από τους πιο δημοφιλείς Έλληνες τραγουδιστές, γνωστός για τις επιτυχίες του στον χώρο της λαϊκής μουσικής. Με μια καριέρα που ξεκίνησε από τα πρώτα του βήματα σε μουσικά σχήματα και συνεχίστηκε με πολυάριθμες συναυλίες και δίσκους, ο Οικονομόπουλος έχει καταφέρει να κερδίσει την αγάπη του κοινού με τη μοναδική φωνή και το πάθος του για τη μουσική.",
-        media: [
-          {
-            photo: "colorday_cover.jpg"
-          }
-        ]
-      },
-      {
-        id: 2,
-        title: "Color Day",
-        category: "Μουσική",
-        eventType: "Φεστιβαλ",
-        venue: "ΟΑΚΑ",
-        address: "Μαρουσι",
-        city: "Αθήνα",
-        country: "Ελλάδα",
-        geoLocation: { latitude: "37.9838", longitude: "23.7275" },
-        startDateTime: "2024-09-15T20:00:00",
-        endDateTime: "2024-09-15T23:00:00",
-        capacity: 2000,
-        ticketTypes: [
-          {
-            ticketTypeID: 1,
-            name: "Γενική Είσοδος",
-            price: 15,
-            quantity: 1500,
-            available: 1500,
-          },
-          {
-            ticketTypeID: 2,
-            name: "VIP",
-            price: 50,
-            quantity: 500,
-            available: 500,
-          }
-        ],
-        bookings: [
-          {
-            bookingID: 1,
-            attendeeID: 1,
-            time:"2024-09-13T20:00:00",
-            ticketType: 1,
-            numberOfTickets: 2,
-            totalCost: 30,
-            bookingStatus: "confiermed"
-          }
-        ],
-        organizerID: 1,
-        status: "published",
-        description: "Το Color Day Festival είναι ένα από τα μεγαλύτερα μουσικά φεστιβάλ στην Ελλάδα, γνωστό για την εντυπωσιακή του ατμόσφαιρα και την ποικιλία των καλλιτεχνών που συμμετέχουν. Με χιλιάδες επισκέπτες κάθε χρόνο, το φεστιβάλ προσφέρει μια μοναδική εμπειρία γεμάτη μουσική, χρώματα και διασκέδαση.",
-        media: [
-          {
-            photo: "colorday_cover.jpg"
-          }
-        ]
-      },
-      {
-        id: 3,
-        title: "Bloody Hawk",
-        category: "Μουσική",
-        eventType: "Συναυλία",
-        venue: "Θέατρο Λυκαβηττού",
-        address: "Λυκαβηττός",
-        city: "Αθήνα",
-        country: "Ελλάδα",
-        geoLocation: { latitude: "37.9838", longitude: "23.7275" },
-        startDateTime: "2024-09-15T20:00:00",
-        endDateTime: "2024-09-15T23:00:00",
-        capacity: 1000,
-        price: 12,ticketTypes: [
-          {
-            ticketTypeID: 1,
-            name: "Γενική Είσοδος",
-            price: 15,
-            quantity: 1500,
-            available: 1500,
-          },
-          {
-            ticketTypeID: 2,
-            name: "VIP",
-            price: 50,
-            quantity: 500,
-            available: 500,
-          }
-        ],
-        bookings: [
-          {
-            bookingID: 1,
-            attendeeID: 1,
-            time:"2024-09-13T20:00:00",
-            ticketType: 1,
-            numberOfTickets: 2,
-            totalCost: 30,
-            bookingStatus: "confiermed"
-          }
-        ],
-        organizerID: 1,
-        status: "published",
-        description: "Το Bloody Hawk είναι ένα από τα πιο δημοφιλή μουσικά οργανώματα στην Ελλάδα, γνωστό για την εντυπωσιακή του ατμόσφαιρα και την ποικιλία των καλλιτεχνών που συμμετέχουν.",
-        media: [
-          {
-            photo: "colorday_cover.jpg"
-          }
-        ]
-      },
-      {
-        id: 4,
-        title: "Ο Τυχαίος Θάνατος Ενός Αναρχικού",
-        category: "Θεατρο",
-        eventType: "Θεατρική παράσταση",
-        venue: "Θέατρο Πόλης",
-        address: "Αριστοτέλους 15",
-        city: "Θεσσαλονίκη",
-        country: "Ελλάδα",
-        geoLocation: { latitude: "37.9838", longitude: "23.7275" },
-        startDateTime: "2024-09-15T20:00:00",
-        endDateTime: "2024-09-15T23:00:00",
-        capacity: 800,
-        price: 20,ticketTypes: [
-          {
-            ticketTypeID: 1,
-            name: "Γενική Είσοδος",
-            price: 18,
-            quantity: 1500,
-            available: 1500,
-          },
-          {
-            ticketTypeID: 2,
-            name: "VIP",
-            price: 50,
-            quantity: 500,
-            available: 500,
-          }
-        ],
-        bookings: [
-          {
-            bookingID: 1,
-            attendeeID: 1,
-            time:"2024-09-13T20:00:00",
-            ticketType: 1,
-            numberOfTickets: 2,
-            totalCost: 30,
-            bookingStatus: "confiermed"
-          }
-        ],
-        organizerID: 1,
-        status: "published",
-        description: "Η παράσταση 'Ο Τυχαίος Θάνατος Ενός Αναρχικού' είναι ένα από τα πιο γνωστά έργα του Ιταλού θεατρικού συγγραφέα Ντάριο Φο. Το έργο εξετάζει θέματα κοινωνικής δικαιοσύνης, πολιτικής διαφθοράς και ανθρώπινης ηθικής μέσα από μια έντονη και συχνά σατιρική προσέγγιση.",
-        media: [
-          {
-            photo: "colorday_cover.jpg"
-          }
-        ]
-      },
-      {
-        id: 5,
-        title: "Amelie Lens",
-        category: "Μουσική",
-        eventType: "DJ Set",
-        venue: "Cozmo",
-        address: "Λεωφόρος Συγγρού 100",
-        city: "Πάτρα",
-        country: "Ελλάδα",
-        geoLocation: { latitude: "37.9838", longitude: "23.7275" },
-        startDateTime: "2024-09-15T20:00:00",
-        endDateTime: "2024-09-15T23:00:00",
-        capacity: 800,
-        price: 45,ticketTypes: [
-          {
-            ticketTypeID: 1,
-            name: "Γενική Είσοδος",
-            price: 20,
-            quantity: 1500,
-            available: 1500,
-          },
-          {
-            ticketTypeID: 2,
-            name: "VIP",
-            price: 50,
-            quantity: 500,
-            available: 500,
-          }
-        ],
-        bookings: [
-          {
-            bookingID: 1,
-            attendeeID: 1,
-            time:"2024-09-13T20:00:00",
-            ticketType: 1,
-            numberOfTickets: 2,
-            totalCost: 30,
-            bookingStatus: "confiermed"
-          }
-        ],
-        organizerID: 1,
-        status: "published",
-        description: "Η Amelie Lens είναι μια από τις πιο αναγνωρισμένες DJs και παραγωγούς στον κόσμο της ηλεκτρονικής μουσικής, γνωστή για τα δυναμικά της set και την ικανότητά της να δημιουργεί μοναδική ατμόσφαιρα σε κάθε εμφάνισή της. Με διεθνή καριέρα και συμμετοχές σε μεγάλα φεστιβάλ, η Lens έχει κερδίσει την εκτίμηση του κοινού και των κριτικών.",
-        media: [
-          {
-            photo: "colorday_cover.jpg"
-          }
-        ]
+    const fetchEventData = async () => {
+      try {
+        const data = await getEvents(); // Calls your backend endpoint (e.g., /api/events)
+        // Ensure your backend items map properly to your state structure
+        setEvents(data.items || data); 
+      } catch (error) {
+        console.error("Error fetching events:", error);
       }
-    ];
+    };
 
-    setEvents(dummyEvents);
+    fetchEventData();
   }, []); // Empty dependency array ensures this only runs once when the page loads
 
 
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
 
   const handlePriceChange = (event, newValue) => {
     setPriceRange(newValue);
@@ -334,18 +83,26 @@ export default function EventSearchPage(props) {
     const safeSearch = removeAccents(searchTerm).trim();
     const safeArea = removeAccents(searchArea).trim();
 
-    const matchesSearch = removeAccents(event.category).includes(safeSearch) || removeAccents(event.title).includes(safeSearch);
+    const eventTitle = event.title || '';
+    const eventCategory = Array.isArray(event.categories) ? event.categories[0] : (event.category || '');
+    const eventCity = event.city || '';
+    const eventAddress = event.address || '';
 
-    const startingPrice = event.ticketTypes?.length > 0 
-      ? Math.min(...event.ticketTypes.map(ticket => ticket.price)) 
-      : 0;
+    const matchesSearch = removeAccents(eventCategory).includes(safeSearch) || removeAccents(eventTitle).includes(safeSearch);
+
+    const ticketList = event.ticket_types || event.ticketTypes || [];
+    // const startingPrice = ticketList.length > 0 
+    //   ? Math.min(...ticketList.map(ticket => ticket.price)) 
+    //   : 0;
+    // const matchesPrice = startingPrice >= priceRange[0] && startingPrice <= priceRange[1];
+    const startingPrice = event.min_price !== null && event.min_price !== undefined ? event.min_price : 0;
     const matchesPrice = startingPrice >= priceRange[0] && startingPrice <= priceRange[1];
 
     const searchAreaText = searchArea.trim().toLowerCase();
-    const matchesAreaText = searchAreaText !== '' && (event.city.toLowerCase().includes(searchAreaText) || event.address.toLowerCase().includes(searchAreaText));
-    const matchesArea = (selectedAreas.length === 0 && searchAreaText === '') || selectedAreas.includes(event.city) || matchesAreaText;
-    
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes('Όλες') || selectedCategories.includes(event.category);    //anti gia category mporo na balo genre gia ta eidh
+
+    const matchesAreaText = searchAreaText !== '' && (eventCity.toLowerCase().includes(searchAreaText) || eventAddress.toLowerCase().includes(searchAreaText));
+    const matchesArea = (selectedAreas.length === 0 && searchAreaText === '') || selectedAreas.includes(eventCity) || matchesAreaText;
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes('Όλες') || selectedCategories.includes(eventCategory);    //anti gia category mporo na balo genre gia ta eidh
 
     return matchesSearch && matchesPrice && matchesArea && matchesCategory;
   });
@@ -380,16 +137,16 @@ export default function EventSearchPage(props) {
           }}
         >
         
-          <Grid container spacing={4} justifyContent={!user ? 'center' : 'flex-start'}>
+          <Grid container spacing={4} alignItems="flex-start" justifyContent={!user ? 'center' : 'flex-start'}>
             {/* filters */}
-            <Grid item xs={12} md={3} sx={{ minWidth: 0 }}> {/* minWidth: 0 strictly forces the Grid not to stretch */}
+            <Grid item xs={12} md={6} sx={{ minWidth: 0 }}> {/* minWidth: 0 strictly forces the Grid not to stretch */}
               <Box sx={{ 
                 bgcolor: 'white', 
                 p: 3, 
                 borderRadius: 2, 
                 boxShadow: 1, 
                 width: '100%', 
-                maxWidth: '100%', // Locks the width
+                // maxWidth: '100%', // Locks the width
                 boxSizing: 'border-box', // MAGIC RULE: Forces padding to stay INSIDE the box, stopping the stretch!
                 overflow: 'hidden' 
               }}>
@@ -471,7 +228,7 @@ export default function EventSearchPage(props) {
                       onChange={handlePriceChange}
                       valueLabelDisplay="auto"
                       min={0}
-                      max={100} 
+                      max={1000} 
                       sx={{
                         color: '#5ba7fb',
                         '& .MuiSlider-thumb': {
@@ -487,9 +244,9 @@ export default function EventSearchPage(props) {
             </Grid>
 
             {/* results */}
-            <Grid item xs={12} md={9}>
+            <Grid item xs={12} md={6} sx={{ flexGrow: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
-                <Typography variant="h4" fontWeight="bold">Κτηνίατροι:</Typography>
+                <Typography variant="h4" fontWeight="bold">Εκδηλώσεις:</Typography>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexGrow: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   <TextField 
                     placeholder="Αναζήτηση εκδήλωσης, χώρου, κατηγορίας..." 
@@ -510,13 +267,32 @@ export default function EventSearchPage(props) {
                 {filteredEvents.length > 0 ? (
                   filteredEvents.map((event) => {
 
-                    const startingPrice = event.ticketTypes?.length > 0 ? Math.min(...event.ticketTypes.map(ticket => ticket.price)) : 0;
+                    // const ticketList = event.ticket_types || event.ticketTypes || [];
+                    // const startingPrice = ticketList.length > 0 ? Math.min(...ticketList.map(ticket => ticket.price)) : 0;
+
+                    // const eventDate = event.start_datetime || event.startDateTime;
+                    // const eventDateObj = new Date(eventDate);
+                    // const formattedDate = !isNaN(eventDateObj) ? eventDateObj.toLocaleDateString('el-GR') : 'Άγνωστη Ημερομηνία';
+                    // const formattedTime = !isNaN(eventDateObj) ? eventDateObj.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                    
+                    // 2. Υπολογίζουμε την ελάχιστη τιμή (ή null αν δεν ήρθαν εισιτήρια από το backend)
+                    const startingPrice = event.min_price;
+                    
+                    // 3. Βρίσκουμε και μορφοποιούμε την ημερομηνία
+                    const eventDate = event.start_datetime || event.startDateTime;
+                    const eventDateObj = new Date(eventDate);
+                    const formattedDate = !isNaN(eventDateObj) ? eventDateObj.toLocaleDateString('el-GR') : 'Άγνωστη Ημερομηνία';
+                    const formattedTime = !isNaN(eventDateObj) ? eventDateObj.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                    // const startingPrice = event.ticketTypes?.length > 0 ? Math.min(...event.ticketTypes.map(ticket => ticket.price)) : 0;
                     return(
-                      <Card key={event.id} variant="outlined" sx={{ borderRadius: 2, bgcolor: 'white', display: 'flex', width: '100%', flexShrink: 0, boxSizing: 'border-box', boxShadow: 1, transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}>
-                        <CardContent sx={{ display: 'flex', width: '100%', p: 3, gap: 3, alignItems: 'center', flexDirection: { xs: 'column', sm: 'row' } }}>
+                      <Card key={event.eventId} variant="outlined" sx={{ borderRadius: 2, bgcolor: 'white', display: 'flex', width: '100%', flexShrink: 0, boxSizing: 'border-box', boxShadow: 1, transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}>
+                        <CardContent sx={{ display: 'flex', width: '100%', p: 3, gap: 4, alignItems: 'center', flexDirection: { xs: 'column', sm: 'row' } }}>
                           
                           <Avatar variant="rounded" sx={{ width: 160, height: 160, bgcolor: '#5ba7fb', borderRadius: 2 }}>
-                            <PersonIcon sx={{ fontSize: 80, color: 'white' }} />
+                            {/* <PersonIcon sx={{ fontSize: 80, color: 'white' }} /> */}
+                            {event.title ? event.title.charAt(0).toUpperCase() : 'E'}
                           </Avatar>
 
                           <Box sx={{ flex: 1 }}>
@@ -524,14 +300,26 @@ export default function EventSearchPage(props) {
                               {event.title}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
-                              {event.startDateTime}
+                              {formattedDate} {formattedTime && `• ${formattedTime}`}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
-                              {event.address}, {event.city}
+                              {event.venue}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
+                              {event.address} {event.city}
+                              {/* {event.venue ? `${event.venue}, ` : ''}{event.address ? `${event.address}, ` : ''}{event.city} */}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
                               Εισιτήρια από: {startingPrice}€
                             </Typography>
+
+                            {/* <Typography variant="body1" fontWeight="bold" sx={{ color: '#2e7d32', mt: 1 }}>
+                              {startingPrice === null 
+                                ? 'Τιμές μη διαθέσιμες' 
+                                : startingPrice === 0 
+                                  ? 'Εισιτήρια: Δωρεάν' 
+                                  : `Εισιτήρια από: ${startingPrice}€`}
+                            </Typography> */}
                           </Box>
 
                           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: '220px' }}>

@@ -12,6 +12,11 @@ import NewEvent from './pages/organizer/NewEvent.jsx';
 import EventHistory from './pages/organizer/EventHistory.jsx';
 import EditEvent from './pages/organizer/EditEvent.jsx';
 import ViewEvent from './pages/organizer/ViewEvent.jsx';
+import Messages from './components/Messages.jsx'
+
+import MessagesNavIndicator from './components/MessagesNavIndicator.jsx'
+import NavBar from "./components/NavBar.jsx";
+import Home from "./pages/Home.jsx";
 
 function App() {
   const [serverMessage, setServerMessage] = useState("Trying to connect...");
@@ -31,8 +36,13 @@ function App() {
   }, []);
 
   return (
+    <>
+    <NavBar />
+    <MessagesNavIndicator />
 
       <Routes>
+        <Route path="/Home" element={<Home />} />
+        <Route path="/messages" element={<Messages />} />
 
         <Route path="/sign-up/SignUpOrganizer" element={<SignUpOrganizer />} />
         <Route path="/sign-up/SignUpUser" element={<SignUpUser />} />
@@ -49,11 +59,9 @@ function App() {
         <Route path="organizer/EventHistory" element={<EventHistory />} /> 
         <Route path="organizer/EditEvent" element={<EditEvent />} /> 
         <Route path="organizer/ViewEvent" element={<ViewEvent />} />
+
       </Routes>
-    // </div>
-
-    
-
+      </>
 
   );
 }

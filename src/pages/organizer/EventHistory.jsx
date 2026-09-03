@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { getMyEvents, publishEvent } from '../../api';
 
 // Setup Map Icon
 const customIcon = new L.Icon({
@@ -35,70 +36,32 @@ export default function EventHistoryPage(props) {
   const [selectedEvent, setSelectedEvent] = useState(null); 
 
   useEffect(() => {
-    // Mocking fetching data for Event History
     const fetchEventData = async () => {
       setLoading(true);
       try {
-        // Replace with your actual backend fetch: await fetch(`http://localhost:3001/bookings?userId=${user.id}`);
-        const mockData = [
-          {
-            id: 1,
-            title: 'Συναυλία Νίκος Οικονομόπουλος',
-            venue: 'OAKA',
-            date: '2026-09-15',
-            time: '21:00',
-            status: 'published', // published, draft, cancelled
-            ticketsBought: 2,
-            position: { lat: 38.0371, lng: 23.7840 }
-          },
-          {
-            id: 2,
-            title: 'Φεστιβάλ Θερινού Κινηματογράφου',
-            venue: 'Θησείο',
-            date: '2026-07-10',
-            time: '20:30',
-            status: 'draft',
-            ticketsBought: 0,
-            position: { lat: 37.9754, lng: 23.7208 }
-          },
-          {
-            id: 3,
-            title: 'Ari',
-            venue: 'Θέατρο Βράχων',
-            date: '2026-08-01',
-            time: '19:00',
-            status: 'cancelled',
-            ticketsBought: 4,
-            position: null
-          }
-        ];
-        
-        // Simulating network delay
-        setTimeout(() => {
-          setEvents(mockData);
-          setLoading(false);
-        }, 800);
-
+        const data = await getMyEvents();
+        setEvents(data.items || data || []);
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchEventData();
-  }, [user]);
+  }, []);
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'published': return 'Δημοσιευμένη';
-      case 'draft': return 'Προσωρινά Αποθηκευμένη';
-      case 'cancelled': return 'Ακυρωμένη';
+      case 'PUBLISHED': return 'Δημοσιευμένη';
+      case 'DRAFT': return 'Προσωρινά Αποθηκευμένη';
+      case 'CANCELLED': return 'Ακυρωμένη';
       default: return status ? status.toUpperCase() : 'Αγνωστη';
     }
   };
 
   const hasValidLocation = (pos) => {
-    return pos && typeof pos.lat === 'number' && typeof pos.lng === 'number' && (pos.lat !== 0 || pos.lng !== 0);
+    return event && event.latitude && event.longitude;
   };
 
   // --- ACTIONS ---
@@ -107,6 +70,25 @@ export default function EventHistoryPage(props) {
     // Add your API logic here
     setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'cancelled' } : e));
   };
+
+  const handlePublish = async (eventId) => {
+      if (!window.confirm("ση"))
+        return;
+  
+      try {
+        await publishEvent(eventId);
+  
+        setEvents(prev => prev.map(e => 
+        e.event_id === eventId ? { ...e, status: 'PUBLISHED' } : e
+      ));
+      
+      alert("Η εκδήλωση δημοσιεύτηκε επιτυχώς!");
+    } catch (error) {
+      console.error("Error publishing event:", error);
+      alert("Υπήρξε σφάλμα κατά τη δημοσίευση.");
+    
+      }
+    }
 
   // --- FILTERING & SORTING ---
   const filteredEvents = events
@@ -171,6 +153,16 @@ export default function EventHistoryPage(props) {
                   sx={{ borderRadius: 4, bgcolor: 'white', border: '1px solid #c7c7c7', boxShadow: 'none', overflow: 'hidden' }}
                 >
                   <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, p: 0 }}>
+                    <Box 
+                      onClick={() => navigate('/organizer/ViewEvent', { state: { eventId: event.event_id } })}
+                      sx={{
+                        display: 'flex',
+                        flex: 1,
+                        flexDirection: {xs: 'column', sm: 'row'},
+                        cursor: 'pointer',
+                        '&:hover': {opacity: 0.7, bgcolor: '#fafafa'}
+                      }}
+                      >
                     
                     {/* Left Side: Map Block (Preserved layout) */}
                     <Box sx={{ 
@@ -183,10 +175,10 @@ export default function EventHistoryPage(props) {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       overflow: 'hidden'
                     }}>
-                      {hasValidLocation(event.position) ? (
-                         <MapContainer center={[event.position.lat, event.position.lng]} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%', zIndex: 1 }}>
+                      {hasValidLocation(event) ? (
+                         <MapContainer center={[event.latitude, event.longitude]} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%', zIndex: 1 }}>
                             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                            <Marker position={[event.position.lat, event.position.lng]} icon={customIcon} />
+                            <Marker position={[event.latitude, event.longitude]} icon={customIcon} />
                          </MapContainer>
                       ) : (
                           <Box sx={{ textAlign: 'center', opacity: 0.6, p: 2 }}>
@@ -209,10 +201,10 @@ export default function EventHistoryPage(props) {
                       </Typography>
                       
                       <Typography variant="body2" color="text.secondary">
-                         Ημερομηνία: {event.date}
+                         Ημερομηνία: {event.start_datetime ? event.start_datetime.split('T')[0] : 'Άγνωστη'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                         Ώρα: {event.time}
+                         Ώρα: {event.start_datetimetime ? event.start_datetime.split('T')[1].substring(0,5) : 'Άγνωστη'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                          Αριθμός Κρατήσεων: {event.ticketsBought}
@@ -223,18 +215,71 @@ export default function EventHistoryPage(props) {
                         fontWeight="bold" 
                         sx={{ 
                           mt: 2, 
-                          color: event.status === 'published' ? 'primary.main' : event.status === 'draft' ? 'warning.main' : 'error.main' 
+                          color: event.status === 'PUBLISHED' ? 'primary.main' : event.status === 'DRAFT' ? 'warning.main' : 'error.main' 
                         }}
                       >
                         ΚΑΤΑΣΤΑΣΗ: {getStatusLabel(event.status)}
                       </Typography>
                     </Box>
+                  </Box>
 
                     {/* Right Side: Action Buttons (Preserved layout styles) */}
                     <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, minWidth: '200px', alignItems: 'center' }}>
+
+                      {(event.status === 'PUBLISHED') && (
+                        <>
+                        <Button 
+                          variant="contained" fullWidth
+                          sx={{ 
+                            background: 'linear-gradient(to bottom, #2f94f8ff, #0f4d8aff) !important',
+                            borderRadius: 5, 
+                            px: 4, py: 1.5, 
+                            fontWeight: 'bold', 
+                            color: 'white',
+                            border: '1px solid #1976d2',
+                            boxShadow: '0 3px 5px 2px rgba(53, 77, 162, 0.3)',
+                          }}
+                          onClick={() => navigate('/organizer/ViewEvent', { state: { eventId: event.event_id } })}
+                        >
+                          ΠΡΟΒΟΛΗ ΕΚΔΗΛΩΣΗΣ
+                        </Button>
+
+                              <Button 
+                                variant="contained" fullWidth
+                                sx={{ 
+                                  background: 'linear-gradient(to bottom, #8a8c8aff, #525151ff) !important',
+                                  borderRadius: 5, 
+                                  px: 4, py: 1.5, 
+                                  fontWeight: 'bold', 
+                                  color: 'white',
+                                  border: '1px solid #3e3e3eff',
+                                  boxShadow: '0 3px 5px 2px rgba(47, 52, 47, 0.3)',
+                                }}
+                                onClick={() => navigate('/organizer/EditEvent', { state: { eventId: event.event_id } })}
+                              >
+                              ΤΡΟΠΟΠΟΙΗΣΗ ΕΚΔΗΛΩΣΗΣ
+                              </Button>
+                          </>
+                        
+                      )}
                       
-                      {(event.status === 'published' || event.status === 'draft') && (
+                      {(event.status === 'DRAFT') && (
                           <>
+                              <Button 
+                                variant="contained" fullWidth
+                                sx={{ 
+                                  background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important',
+                                  borderRadius: 5,
+                                  fontWeight: 'bold', 
+                                  color: 'white',
+                                  border: '1px solid #2e7d32',
+                                  boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
+                                }}
+                                onClick={() => handlePublish(event.event_id)}
+                              >
+                              ΔΗΜΟΣΙΕΥΣΗ ΕΚΔΗΛΩΣΗΣ
+                              </Button> 
+
                               <Button 
                                 variant="contained" fullWidth
                                 sx={{ 
@@ -246,7 +291,7 @@ export default function EventHistoryPage(props) {
                                   border: '1px solid #1976d2',
                                   boxShadow: '0 3px 5px 2px rgba(53, 77, 162, 0.3)',
                                 }}
-                                onClick={() => navigate('/organizer/ViewEvent', { state: { event: event } })}
+                                onClick={() => navigate('/organizer/ViewEvent', { state: { eventId: event.event_id } })}
                               >
                               ΠΡΟΒΟΛΗ ΕΚΔΗΛΩΣΗΣ
                               </Button>
@@ -261,14 +306,14 @@ export default function EventHistoryPage(props) {
                                   border: '1px solid #3e3e3eff',
                                   boxShadow: '0 3px 5px 2px rgba(47, 52, 47, 0.3)',
                                 }}
-                                onClick={() => navigate('/organizer/EditEvent', { state: { event: event } })}
+                                onClick={() => navigate('/organizer/EditEvent', { state: { eventId: event.event_id } })}
                               >
                               ΤΡΟΠΟΠΟΙΗΣΗ ΕΚΔΗΛΩΣΗΣ
                               </Button>
                           </>
                       )}
 
-                      {event.status === 'cancelled' && (
+                      {event.status === 'CANCELLED' && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Button 
                             variant="contained" fullWidth
@@ -281,7 +326,7 @@ export default function EventHistoryPage(props) {
                               border: '1px solid #1976d2',
                               boxShadow: '0 3px 5px 2px rgba(53, 77, 162, 0.3)',
                             }}
-                            onClick={() => navigate('/organizer/ViewEvent', { state: { event: event } })}
+                            onClick={() => navigate('/organizer/ViewEvent', { state: { eventId: event.id } })}
                           >
                           ΠΡΟΒΟΛΗ ΕΚΔΗΛΩΣΗΣ
                           </Button>

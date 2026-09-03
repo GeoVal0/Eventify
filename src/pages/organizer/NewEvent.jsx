@@ -6,6 +6,7 @@ import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import TextField from "@mui/material/TextField";
+import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
@@ -17,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { createEvent } from '../../api'; // Adjust path if needed
 
 
 const customIcon = new L.Icon({
@@ -69,7 +71,7 @@ const EditContainer = styled(Stack)(({ theme }) => ({
 
 export default function CreateEvent() {
   const navigate = useNavigate();
-
+  const [apiError, setApiError] = React.useState('');
   const [title, setTitle] = React.useState("");
   const [titleError, setTitleError] = React.useState(false);
   const [titleErrorMessage, setTitleErrorMessage] = React.useState('');
@@ -267,22 +269,42 @@ export default function CreateEvent() {
     }
 
     // If any validation failed, STOP here. Do not save.
-    if (!isValid) {
+    if (!isValid)
       return;
-    }
+
+    const payload = {
+      title: title,
+      event_type: eventType,
+      categories: [category], // Backend expects an array of strings[cite: 5]
+      venue: venue,
+      city: city,
+      address: address,
+      country: country,
+      latitude: position.lat,
+      longitude: position.lng,
+      start_datetime: `${date}T${startTime}:00`, // Format: YYYY-MM-DDTHH:MM:SS
+      end_datetime: `${date}T${endTime}:00`,
+      capacity: parseInt(capacity, 10),
+      description: description,
+      ticket_types: tickets.map(t => ({
+         name: t.type, // Map 'type' to 'name' as expected by backend schema[cite: 5]
+         price: parseFloat(t.price),
+         quantity: parseInt(t.quantity, 10)
+      }))
+    };
+    
 
     try {
-      console.log("Saving new event:", {
-        title, category, date, startTime, endTime, venue, city, country, address, description, capacity, tickets,
-        latitude: position.lat, longitude: position.lng
-      });
+      setApiError('');
 
+      await createEvent(payload);
       alert("Η εκδήλωση δημιουργήθηκε επιτυχώς!");
       navigate("/organizer/EventHistory");
       
     } catch (err) {
       console.error(err);
-      alert("Σφάλμα κατά την αποθήκευση της εκδήλωσης.");
+      // alert("Σφάλμα κατά την αποθήκευση της εκδήλωσης.");
+      setApiError(err.message);
     }
   };
 
@@ -305,6 +327,11 @@ export default function CreateEvent() {
             noValidate
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
+            {apiError && (
+              <Alert severity="error" sx={{ mb: 2}}>
+                {apiError}
+              </Alert>
+            )}
             {/* Row 1: Title and Category */}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <FormControl fullWidth required>

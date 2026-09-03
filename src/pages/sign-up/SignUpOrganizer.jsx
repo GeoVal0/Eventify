@@ -17,9 +17,14 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
-import OutlinedInput from '@mui/material/OutlinedInput';
+// import OutlinedInput from '@mui/material/OutlinedInput';
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -64,8 +69,9 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignUpVet(props) {
+export default function SignUpOrganizer(props) {
   const { login, logout } = useAuth();
+  const [openDialog, setOpenDialog] = React.useState(false);
   const navigate = useNavigate();
   const [usernameError, setUsernameError] = React.useState(false);
   const [usernameErrorMessage, setUsernameErrorMessage] = React.useState('');
@@ -96,6 +102,10 @@ export default function SignUpVet(props) {
   const handleClickShowPassword = () => setShowPassword(!showPassword);
   const handleMouseDownPassword = (event) => event.preventDefault();
   const handleClickShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    navigate('/home');
+  };
 
   // Log out any existing user when visiting signup page
   React.useEffect(() => {
@@ -229,35 +239,45 @@ export default function SignUpVet(props) {
 
     const newOrganizer = {
       username: data.get('username'),
-      name: data.get('name'),
-      lastName: data.get('lastName'),
-      email: data.get('email'),
-      phoneNumber: data.get('phoneNumber'),
-      address: data.get('address'),
-      zip: data.get('zip'),
-      afm: data.get('afm'),
       password: data.get('password'),
+      confirm_password: data.get('pass'),
+      first_name: data.get('name'),
+      last_name: data.get('lastName'),
+      email: data.get('email'),
+      phone: data.get('phoneNumber'),
+      address: `${data.get('address')}, ${data.get('zip')}`, 
+      city: "",
+      country: "",
+      // zip: data.get('zip'),
+      afm: data.get('afm'),
       gender: gender,
+      latitude: null,
+      longitude: null ,
+      role: "ORGANIZER"
     };
 
     try {
-      const response = await fetch('http://localhost:3001/vet', {
+      const response = await fetch('http://localhost:8000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newVet),
+        body: JSON.stringify(newOrganizer),
       });
 
       if (response.ok) {
-        const savedUser = await response.json();
-        // Use your AuthContext login function
-        login({ name: savedUser.name, role: 'vet', email: savedUser.email });
-        // Navigate to Vet Dashboard
-        navigate('/vet/VetDashboard');
+        // Registration successful! 
+        // DO NOT log the user in. The assignment strictly requires them to pend admin approval.
+        setOpenDialog(true);        
+        // Redirect them back to the login page (or a dedicated 'Pending' page if you built one)
       } else {
         const errorData = await response.json();
-        alert(errorData.message || "Υπήρξε πρόβλημα κατά την εγγραφή.");
+        // 4. FastAPI 422 errors put details in an array. This prints exactly what field is failing.
+        const errorMessage = typeof errorData.detail === 'string' 
+            ? errorData.detail 
+            : JSON.stringify(errorData.detail);
+        alert(`Αποτυχία εγγραφής: ${errorMessage}`);
+        // alert(errorData.detail || "Υπήρξε πρόβλημα κατά την εγγραφή.");
       }
     } catch (error) {
       console.error("Connection Error:", error);
@@ -513,6 +533,28 @@ export default function SignUpVet(props) {
             </Typography>
         </Card>
       </SignUpContainer>
+      
+      {/* Pop-up Παράθυρο Αναμονής Έγκρισης */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Η Εγγραφή ήταν Επιτυχής!"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Η αίτηση εγγραφής σας ολοκληρώθηκε με επιτυχία. Εκκρεμεί η έγκριση της αίτησης εγγραφής στην εφαρμογή από τον διαχειριστή. Μόλις εγκριθεί, θα μπορείτε να συνδεθείτε με τα στοιχεία σας.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} autoFocus variant="contained">
+            Επιστροφή στην Αρχική Σελίδα
+          </Button>
+        </DialogActions>
+      </Dialog>
     </AppTheme>
   );
 }

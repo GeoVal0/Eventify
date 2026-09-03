@@ -64,10 +64,14 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignIn(props) {
-  const [email, setEmail] = React.useState('');
+  // const [email, setEmail] = React.useState('');
+  const [username, setUsername] = React.useState('');
+  const [usernameError, setUsernameError] = React.useState('');
+  const [usernameErrorMessage, setUsernameErrorMessage] = React.useState('');
+
   const [password, setPassword] = React.useState('');
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
+  // const [emailError, setEmailError] = React.useState(false);
+  // const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [formError, setFormError] = React.useState('');
@@ -91,14 +95,23 @@ export default function SignIn(props) {
   const validateInputs = () => {
     let isValid = true;
 
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setEmailError(true);
-      setEmailErrorMessage('Μη έγκυρη διεύθυνση email.');
+    if (!username || username.trim() === 0){
+      setUsernameError('true');
+      setUsernameErrorMessage('Το Όνομα Χρήστη είναι υποχρεωτικό,');
       isValid = false;
     } else {
-      setEmailError(false);
-      setEmailErrorMessage('');
+      setUsernameError(false);
+      setUsernameErrorMessage('');
     }
+
+    // if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    //   setEmailError(true);
+    //   setEmailErrorMessage('Μη έγκυρη διεύθυνση email.');
+    //   isValid = false;
+    // } else {
+    //   setEmailError(false);
+    //   setEmailErrorMessage('');
+    // }
 
     if (!password || password.length < 8) {
       setPasswordError(true);
@@ -118,75 +131,96 @@ export default function SignIn(props) {
     setFormError(''); // Clear previous errors
 
     // 1. Run Validation locally first
-    if (!validateInputs()) {
+    if (!validateInputs())
       return; 
+
+    // try {
+    //   // 2. Prepare data for FastAPI's OAuth2 format
+    //   // Note: FastAPI's default OAuth2 expects the field to be named 'username', 
+    //   // even if the user is typing their email address into the form.
+    //   const formData = new URLSearchParams();
+    //   formData.append("username", email); 
+    //   formData.append("password", password);
+
+    //   // 3. Send POST request to your new Python Backend
+    //   const response = await fetch("http://localhost:8000/api/auth/login", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/x-www-form-urlencoded",
+    //     },
+    //     body: formData,
+    //   });
+
+    //   // 4. Handle Server Errors (e.g., Wrong password, Admin pending)
+    //   if (!response.ok) {
+    //     const errorData = await response.json();
+    //     // Extract the specific error message FastAPI sent back (like "Account pending admin approval.")
+    //     throw new Error(errorData.detail || "Αποτυχία σύνδεσης."); 
+    //   }
+
+    //   // 5. Success! Get the JWT Token
+    //   const data = await response.json();
+    //   const token = data.access_token;
+
+    //   // 6. Save the Token to localStorage
+    //   // This is STRICTLY REQUIRED by your assignment to consume APIs later
+    //   localStorage.setItem("jwt_token", token);
+
+    //   // 7. Decode the JWT to find the user's role and ID
+    //   // We don't need a heavy library for this, we can just parse the base64 payload
+    //   const base64Url = token.split('.')[1];
+    //   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    //   const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+    //       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    //   }).join(''));
+      
+    //   const decodedToken = JSON.parse(jsonPayload);
+      
+    //   // Update your AuthContext
+    //   login({ id: decodedToken.sub, role: decodedToken.role });
+
+    //   // 8. Redirect based on the role defined in your database
+    //   switch(decodedToken.role) {
+    //     case "ADMIN":
+    //       navigate('/admin/dashboard');
+    //       break;
+    //     case "ORGANIZER":
+    //       navigate('/organizer/dashboard');
+    //       break;
+    //     case "ATTENDEE":
+    //     case "GUEST":
+    //     default:
+    //       navigate('/'); // Main homepage for normal users
+    //       break;
+    //   }
+
+    // } catch (err) {
+    //   console.error("Login Error:", err);
+    //   // Display the error from the backend to the user
+    //   setFormError(err.message || 'Αδυναμία σύνδεσης στον διακομιστή.');
+    // }
+
+
+    // 3. Delegate the API call to your AuthContext
+    const result = await login(username, password);
+
+    if (result.success) {
+      // 4. Navigate to the actual routes defined in App.jsx[cite: 12]
+      const userRole = JSON.parse(localStorage.getItem('user_data'))?.role;
+      
+      if (userRole === "ADMIN") {
+        navigate('/admin/UserList'); // Matches your App.jsx[cite: 12]
+      } else if (userRole === "ORGANIZER") {
+        navigate('/organizer/EventHistory'); // Matches your App.jsx[cite: 12]
+      } else {
+        navigate('search/SearchEvents'); // Matches your App.jsx[cite: 12]
+      }
+    } else {
+      setFormError(result.error || 'Αδυναμία σύνδεσης στον διακομιστή.');
     }
 
-    try {
-      // 2. Prepare data for FastAPI's OAuth2 format
-      // Note: FastAPI's default OAuth2 expects the field to be named 'username', 
-      // even if the user is typing their email address into the form.
-      const formData = new URLSearchParams();
-      formData.append("username", email); 
-      formData.append("password", password);
 
-      // 3. Send POST request to your new Python Backend
-      const response = await fetch("http://localhost:8000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: formData,
-      });
 
-      // 4. Handle Server Errors (e.g., Wrong password, Admin pending)
-      if (!response.ok) {
-        const errorData = await response.json();
-        // Extract the specific error message FastAPI sent back (like "Account pending admin approval.")
-        throw new Error(errorData.detail || "Αποτυχία σύνδεσης."); 
-      }
-
-      // 5. Success! Get the JWT Token
-      const data = await response.json();
-      const token = data.access_token;
-
-      // 6. Save the Token to localStorage
-      // This is STRICTLY REQUIRED by your assignment to consume APIs later
-      localStorage.setItem("jwt_token", token);
-
-      // 7. Decode the JWT to find the user's role and ID
-      // We don't need a heavy library for this, we can just parse the base64 payload
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      
-      const decodedToken = JSON.parse(jsonPayload);
-      
-      // Update your AuthContext
-      login({ id: decodedToken.sub, role: decodedToken.role });
-
-      // 8. Redirect based on the role defined in your database
-      switch(decodedToken.role) {
-        case "ADMIN":
-          navigate('/admin/dashboard');
-          break;
-        case "ORGANIZER":
-          navigate('/organizer/dashboard');
-          break;
-        case "ATTENDEE":
-        case "GUEST":
-        default:
-          navigate('/'); // Main homepage for normal users
-          break;
-      }
-
-    } catch (err) {
-      console.error("Login Error:", err);
-      // Display the error from the backend to the user
-      setFormError(err.message || 'Αδυναμία σύνδεσης στον διακομιστή.');
-    }
   };
 
 
@@ -213,21 +247,21 @@ export default function SignIn(props) {
             {formError && <Alert severity="error">{formError}</Alert>}
 
             <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
+              <FormLabel htmlFor="username">Username</FormLabel>
               <TextField
-                id="email"
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                autoComplete="email"
+                id="username"
+                type="text"
+                name="username"
+                placeholder="your@"
+                autoComplete="username"
                 autoFocus
                 fullWidth
                 variant="outlined"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={emailError}
-                helperText={emailErrorMessage}
-                color={emailError ? 'error' : 'primary'}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                error={usernameError}
+                helperText={usernameErrorMessage}
+                color={usernameError ? 'error' : 'primary'}
               />
             </FormControl>
             <FormControl>
