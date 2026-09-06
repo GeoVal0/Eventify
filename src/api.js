@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = "http://localhost:8000";
 
 export const fetchWithAuth = async (endpoint, options = {}) => {
   const token = localStorage.getItem("access_token");
@@ -159,12 +159,22 @@ export const getEvents = () => {
   return fetchWithAuth('/api/events'); 
 };
 
+// Confirmed against main.py + schemas.py: attendee-only (organizers/admins
+// get a 403), returns { events: EventSummary[], cold_start: bool }.
+// cold_start is true when the ranking isn't grounded in this attendee's
+// own booking history (new user, or falling all the way back to
+// popularity) -- worth showing a different heading for that case.
+export const getRecommendations = (limit = 10) => {
+  return fetchWithAuth(`/api/recommendations?limit=${limit}`);
+};
+
 export const createBooking = (eventId, payload) => {
   return fetchWithAuth(`/api/events/${eventId}/bookings`, { 
     method: 'POST',
     body: JSON.stringify(payload)
   });
 };
+
 
 
 //MESSAGES

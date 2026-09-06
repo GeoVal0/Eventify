@@ -522,7 +522,7 @@ export default function SignUpOrganizer(props) {
           </Box>
           <Divider></Divider>
             <Typography sx={{ textAlign: 'center' }}>
-              Έχεις ήδη λογαριασμό;{' '}                        // thelei kai o organizer egkrisi?????
+              Έχεις ήδη λογαριασμό;{' '}
               <Link
                 href="/login"
                 variant="body2"

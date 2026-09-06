@@ -70,7 +70,7 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignUpUser(props) {
+export default function SignUpAttendee(props) {
   const { login, logout } = useAuth();
   const [openDialog, setOpenDialog] = React.useState(false);
   const navigate = useNavigate();

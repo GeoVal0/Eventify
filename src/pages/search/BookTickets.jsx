@@ -50,7 +50,7 @@ export default function BookTickets(props) {
 
   const handleBooking = () => {
     if (!user){
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname, event: event } });
     }
     else {
       setOpenConfirmDialog(true);

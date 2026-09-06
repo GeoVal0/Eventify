@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from pydantic import BaseModel
 
 # Import our custom modules
 import models
@@ -194,6 +195,38 @@ def register_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
 @app.get("/api/auth/me", response_model=schemas.UserResponse)
 def get_my_profile(current_user: models.User = Depends(auth.get_current_user)):
     """Returns the logged-in user's own profile."""
+    return current_user
+
+class UserUpdateProfile(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    gender: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    password: Optional[str] = None
+
+@app.put("/api/auth/me", response_model=schemas.UserResponse)
+def update_my_profile(
+    payload: UserUpdateProfile,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """Updates the logged-in user's own profile."""
+    if payload.first_name is not None:
+        current_user.first_name = payload.first_name
+    if payload.last_name is not None:
+        current_user.last_name = payload.last_name
+    if payload.gender is not None:
+        current_user.gender = payload.gender
+    if payload.address is not None:
+        current_user.address = payload.address
+    if payload.phone is not None:
+        current_user.phone = payload.phone
+    if payload.password: # Only update password if a new one was provided
+        current_user.hashed_password = auth.get_password_hash(payload.password)
+
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 

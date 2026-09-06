@@ -16,9 +16,8 @@ import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-
 import AppTheme from '../shared-theme/AppTheme';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -64,20 +63,18 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignIn(props) {
-  // const [email, setEmail] = React.useState('');
+  //store user input values, error statesm and messages 
   const [username, setUsername] = React.useState('');
   const [usernameError, setUsernameError] = React.useState('');
   const [usernameErrorMessage, setUsernameErrorMessage] = React.useState('');
-
   const [password, setPassword] = React.useState('');
-  // const [emailError, setEmailError] = React.useState(false);
-  // const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [formError, setFormError] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const [ready, setReady] = React.useState(false);
 
+  //if a user is already logged in, log them out when they visit the login page for safety
   React.useEffect(() => {
     if (user) {
       logout();
@@ -89,9 +86,26 @@ export default function SignIn(props) {
   const handleClickShowPassword = () => setShowPassword(!showPassword);
   const handleMouseDownPassword = (event) => {event.preventDefault();};
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, login, logout } = useAuth();
 
+  React.useEffect(() => {
+    if (user) {
+      const userRole = JSON.parse(localStorage.getItem('user_data'))?.role;
+      
+      if (userRole === "ADMIN") {
+        navigate('/admin/UserList', { replace: true });
+      } else {
+        const returnPath = location.state?.from || '/Home';
+        const returnState = location.state?.event ? { event: location.state.event } : {};
+        navigate(returnPath, { state: returnState, replace: true });
+      }
+    } else {
+      setReady(true);
+    }
+  }, [user, navigate, location]);
 
+  //local validation
   const validateInputs = () => {
     let isValid = true;
 
@@ -104,18 +118,9 @@ export default function SignIn(props) {
       setUsernameErrorMessage('');
     }
 
-    // if (!email || !/\S+@\S+\.\S+/.test(email)) {
-    //   setEmailError(true);
-    //   setEmailErrorMessage('Μη έγκυρη διεύθυνση email.');
-    //   isValid = false;
-    // } else {
-    //   setEmailError(false);
-    //   setEmailErrorMessage('');
-    // }
-
     if (!password || password.length < 8) {
       setPasswordError(true);
-      setPasswordErrorMessage('Ο κωδικός πρέπει να έχει μήκος τουλάχιστον 8 χαρακτήρες.');
+      setPasswordErrorMessage('Ο Κωδικός πρέπει να έχει μήκος τουλάχιστον 8 χαρακτήρες.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -128,99 +133,19 @@ export default function SignIn(props) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setFormError(''); // Clear previous errors
+    setFormError('');
 
-    // 1. Run Validation locally first
+    //if inputs are not valid, do not proceed with the API call
     if (!validateInputs())
-      return; 
+      return;
 
-    // try {
-    //   // 2. Prepare data for FastAPI's OAuth2 format
-    //   // Note: FastAPI's default OAuth2 expects the field to be named 'username', 
-    //   // even if the user is typing their email address into the form.
-    //   const formData = new URLSearchParams();
-    //   formData.append("username", email); 
-    //   formData.append("password", password);
-
-    //   // 3. Send POST request to your new Python Backend
-    //   const response = await fetch("http://localhost:8000/api/auth/login", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/x-www-form-urlencoded",
-    //     },
-    //     body: formData,
-    //   });
-
-    //   // 4. Handle Server Errors (e.g., Wrong password, Admin pending)
-    //   if (!response.ok) {
-    //     const errorData = await response.json();
-    //     // Extract the specific error message FastAPI sent back (like "Account pending admin approval.")
-    //     throw new Error(errorData.detail || "Αποτυχία σύνδεσης."); 
-    //   }
-
-    //   // 5. Success! Get the JWT Token
-    //   const data = await response.json();
-    //   const token = data.access_token;
-
-    //   // 6. Save the Token to localStorage
-    //   // This is STRICTLY REQUIRED by your assignment to consume APIs later
-    //   localStorage.setItem("jwt_token", token);
-
-    //   // 7. Decode the JWT to find the user's role and ID
-    //   // We don't need a heavy library for this, we can just parse the base64 payload
-    //   const base64Url = token.split('.')[1];
-    //   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    //   const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-    //       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    //   }).join(''));
-      
-    //   const decodedToken = JSON.parse(jsonPayload);
-      
-    //   // Update your AuthContext
-    //   login({ id: decodedToken.sub, role: decodedToken.role });
-
-    //   // 8. Redirect based on the role defined in your database
-    //   switch(decodedToken.role) {
-    //     case "ADMIN":
-    //       navigate('/admin/dashboard');
-    //       break;
-    //     case "ORGANIZER":
-    //       navigate('/organizer/dashboard');
-    //       break;
-    //     case "ATTENDEE":
-    //     case "GUEST":
-    //     default:
-    //       navigate('/'); // Main homepage for normal users
-    //       break;
-    //   }
-
-    // } catch (err) {
-    //   console.error("Login Error:", err);
-    //   // Display the error from the backend to the user
-    //   setFormError(err.message || 'Αδυναμία σύνδεσης στον διακομιστή.');
-    // }
-
-
-    // 3. Delegate the API call to your AuthContext
+    //API call to AuthContext
     const result = await login(username, password);
 
-    if (result.success) {
-      // 4. Navigate to the actual routes defined in App.jsx[cite: 12]
-      const userRole = JSON.parse(localStorage.getItem('user_data'))?.role;
-      
-      if (userRole === "ADMIN") {
-        navigate('/admin/UserList'); // Matches your App.jsx[cite: 12]
-      } else if (userRole === "ORGANIZER") {
-        navigate('/organizer/EventHistory'); // Matches your App.jsx[cite: 12]
-      } else {
-        navigate('search/SearchEvents'); // Matches your App.jsx[cite: 12]
-      }
-    } else {
-      setFormError(result.error || 'Αδυναμία σύνδεσης στον διακομιστή.');
+    //if login is successful, navigate to the appropriate page based on user role. otherwise, show an error message
+    if (!result.success) {
+      setFormError('Λάθος όνομα χρήστη ή κωδικός πρόσβασης.');
     }
-
-
-
   };
 
 
@@ -252,7 +177,7 @@ export default function SignIn(props) {
                 id="username"
                 type="text"
                 name="username"
-                placeholder="your@"
+                placeholder="username"
                 autoComplete="username"
                 autoFocus
                 fullWidth
@@ -312,7 +237,7 @@ export default function SignIn(props) {
             </Typography>
 
             <Link
-              href="/sign-up/SignUpUser"
+              href="/sign-up/SignUpAttendee"
               variant="body2"
               sx={{ textAlign: 'center', display: 'block',  color: "#000000ff" }}
             >
