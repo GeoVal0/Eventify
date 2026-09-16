@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Fab, Badge } from '@mui/material';
+import {Fab, Badge } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { getMessages } from '../api';
+import {useNavigate } from 'react-router-dom';
+import {useAuth } from '../context/AuthContext';
+import {getMessages } from '../api';
 
 // Small persistent "you have new messages" indicator. Doesn't pop anything
 // open -- clicking it just navigates to the /messages page. This exists as
@@ -48,16 +48,16 @@ export default function MessagesNavIndicator() {
       onClick={() => navigate('/messages')}
       sx={{
         position: 'fixed',
-        bottom: 24,
-        right: 24,
+        bottom: 40,
+        right: 40,
         zIndex: 2147483647,
         bgcolor: '#1976d2',
         color: 'white',
-        '&:hover': { bgcolor: '#115293' }
-      }}
+        '&:hover': {bgcolor: '#115293' }
+     }}
     >
       <Badge badgeContent={unreadCount} color="error">
-        <EmailIcon />
+        <EmailIcon sx={{fontSize: 32}}/>
       </Badge>
     </Fab>
   );

@@ -1,4 +1,4 @@
-import { createTheme, alpha } from '@mui/material/styles';
+import {createTheme, alpha } from '@mui/material/styles';
 
 const defaultTheme = createTheme();
 const customShadows = [...defaultTheme.shadows];

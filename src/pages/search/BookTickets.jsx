@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, Typography, Button, Avatar, Grid, Card, Select, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress
-} from '@mui/material';
+import {Box, Typography, Button, Avatar, Grid, Card, Select, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress} from '@mui/material';
 import AppTheme from '../../shared-theme/AppTheme';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; 
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import {useLocation, useNavigate } from 'react-router-dom';
+import {useAuth } from '../../context/AuthContext'; 
+import {MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { createBooking, getEventDetail } from '../../api'; 
+import {createBooking, getEventDetail } from '../../api'; 
 
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -19,6 +17,21 @@ const customIcon = new L.Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
+const CATEGORY_IMAGES = {
+  music: '/public/1061513-taylor-swift-en-concert-a-paris-la-defense-arena-on-y-etait-on-vous-raconte.jpg',
+  theater: '/public/theater_01.jpg',
+  cinema: '/public/aithousa-cine-opera.jpg_1.jpg',
+  sports: '/public/depositphotos_690286156-stock-photo-set-sport-equipment-soccer-basketball.jpg',
+  festival: '/public/ASFF-2024-11.jpg',
+  seminar: '/public/what-is-a-seminar_standard.jpg',
+  arts: '/public/6113d70d63ca0-What-is-Fine-Art--Eden-Gallery-.jpeg'
+};
+
+const getFallbackImage = (event) => {
+  const matchedCategory = (event.categories || []).find(c => CATEGORY_IMAGES[c]);
+  if (matchedCategory) return CATEGORY_IMAGES[matchedCategory];
+};
 
 export default function BookTickets(props) {
   const navigate = useNavigate();
@@ -57,6 +70,35 @@ export default function BookTickets(props) {
     }
   }
 
+// const handleConfirm = async () => {
+//     const requestedTickets = Object.entries(selectedTickets)
+//       .filter(([id, quantity]) => quantity > 0)
+//       .map(([id, quantity]) => ({
+//         ticket_type_id: id,
+//         number_of_tickets: quantity
+//       }));
+
+//     try {
+//       for (const ticket of requestedTickets) {
+//         const payload = {
+//           ticket_type_id: ticket.ticket_type_id,
+//           number_of_tickets: ticket.number_of_tickets
+//         };
+//         await createBooking(fullEvent.event_id, payload);
+//       }
+      
+//       alert("Η κράτηση ολοκληρώθηκε επιτυχώς!");
+//       setOpenConfirmDialog(false);
+//       // navigate('/user/UserDashboard'); 
+      
+//     } catch (error) {
+//       console.error("Booking error:", error);
+//       alert(`Σφάλμα: ${error.message}`);
+//       setOpenConfirmDialog(false);
+//     }
+//   }
+
+
 const handleConfirm = async () => {
     const requestedTickets = Object.entries(selectedTickets)
       .filter(([id, quantity]) => quantity > 0)
@@ -65,7 +107,14 @@ const handleConfirm = async () => {
         number_of_tickets: quantity
       }));
 
+    if (requestedTickets.length === 0) {
+      alert("Επιλέξτε τουλάχιστον ένα εισιτήριο.");
+      setOpenConfirmDialog(false);
+      return;
+    }
+
     try {
+      // Use a for...of loop to await each booking sequentially
       for (const ticket of requestedTickets) {
         const payload = {
           ticket_type_id: ticket.ticket_type_id,
@@ -76,11 +125,12 @@ const handleConfirm = async () => {
       
       alert("Η κράτηση ολοκληρώθηκε επιτυχώς!");
       setOpenConfirmDialog(false);
-      // navigate('/user/UserDashboard'); 
+      // Optional: Clear selection after successful booking so they can book again
+      setSelectedTickets({});
       
     } catch (error) {
       console.error("Booking error:", error);
-      alert(`Σφάλμα: ${error.message}`);
+      alert(`Σφάλμα: Η συναλλαγή απέτυχε. ${error.message}`);
       setOpenConfirmDialog(false);
     }
   }
@@ -100,9 +150,9 @@ const handleConfirm = async () => {
 
   if (!event) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Box sx={{p: 4, textAlign: 'center'}}>
         <Typography variant="h5">Δεν βρέθηκε η εκδήλωση.</Typography>
-        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }} variant="contained">
+        <Button onClick={() => navigate(-1)} sx={{mt: 2}} variant="contained">
           ΕΠΙΣΤΡΟΦΗ ΣΤΗΝ ΑΝΑΖΗΤΗΣΗ
         </Button>
       </Box>
@@ -111,7 +161,7 @@ const handleConfirm = async () => {
 
   if (loading || !fullEvent) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+      <Box sx={{display: 'flex', justifyContent: 'center', mt: 10}}>
         <CircularProgress />
       </Box>
     );
@@ -154,52 +204,68 @@ const handleConfirm = async () => {
 
   return (
     <AppTheme {...props}>
-      <Box sx={{ display: 'flex', flexDirection: 'row', minHeight: '100vh', width: '100%' }}>
+      <Box sx={{display: 'flex', flexDirection: 'row', minHeight: '100vh', width: '100%'}}>
         <Box 
-          sx={{ 
+          sx={{
             flex: 1, 
             bgcolor: 'background.default', 
             p: { xs: 2, md: 4 }, 
             display: 'flex', 
             justifyContent: 'center',
             overflowY: 'auto'
-          }}
+         }}
         >
           <Box sx={cardStyle}>
-            <Box sx={{ 
+            <Box sx={{
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'space-between', 
-              mb: 6, 
+              // mb: 6, 
               flexDirection: { xs: 'column', sm: 'row' }, 
               color: 'text.primary', 
               gap: 3 
-            }}>
+           }}>
               
-            <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', flexDirection: { xs: 'column', sm: 'row' }}}>
-              <Avatar variant="rounded" sx={{ width: 160, height: 160, bgcolor: '#e3f2fd', color: '#1976d2', borderRadius: 2, fontSize: '4rem', fontWeight: 'bold' }}>
-                {fullEvent.title ? fullEvent.title.charAt(0).toUpperCase() : 'E'}
-              </Avatar>
+            <Box sx={{display: 'flex', gap: 3, alignItems: 'center', flexDirection: { xs: 'column', sm: 'row'}}}>
+              {/* Image display matching your backend static upload route */}
+              <Box 
+                component="img"
+                src={
+                  event.cover_photo 
+                    ? `http://localhost:8000/static/uploads/${event.cover_photo}` 
+                    : event.photos && event.photos.length > 0 
+                      ? `http://localhost:8000/static/uploads/${event.photos[0].filename || event.photos[0]}`
+                      : getFallbackImage(event)
+                }
+                alt={event.title}
+                sx={{
+                  width: { xs: '100%', sm: 280 }, 
+                  height: 200, 
+                  objectFit: 'cover', 
+                  borderRadius: 2,
+                  bgcolor: '#5ba7fb' 
+               }}
+              />
                 
               <Box>
-                <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>{fullEvent.title}</Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{fullEvent.venue}</Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{fullEvent.address}, {fullEvent.city}</Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.25rem' }}>{formattedDate}</Typography>
+                <Typography variant="h4" fontWeight="bold" sx={{mb: 1}}>{fullEvent.title}</Typography>
+                <Typography variant="body1" sx={{color: 'text.secondary', fontSize: '1.25rem'}}>{fullEvent.venue}</Typography>
+                <Typography variant="body1" sx={{color: 'text.secondary', fontSize: '1.25rem'}}>{fullEvent.address}, {fullEvent.city}</Typography>
+                <Typography variant="body1" sx={{color: 'text.secondary', fontSize: '1.25rem'}}>{formattedDate}</Typography>
               </Box>
             </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mt: 4, flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Περιγραφή Εκδήλωσης: </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>{fullEvent.description}</Typography>
+          <Box sx={{display: 'flex', justifyContent: 'space-between', width: '100%', mt: 4, flexDirection: { xs: 'column', md: 'row' }, gap: 4}}>
+            <Box sx={{flex: 1}}>
+              <Typography variant="h6" sx={{mb: 2}}>Περιγραφή Εκδήλωσης: </Typography>
+              <Typography variant="body1" sx={{color: 'text.secondary', fontSize: '1.1rem'}}>{fullEvent.description}</Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', width: { xs: '100%', md: '400px' } }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Τοποθεσία Εκδήλωσης:</Typography>
-              <Box sx={{ height: '200px', width: '400px', borderRadius: 2, overflow: 'hidden', border: '1px solid #ddd' }}>
-                <MapContainer center={position} zoom={15} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+            <Box sx={{display: 'flex', flexDirection: 'column', width: { xs: '100%', md: '400px' }}}>
+              <Typography variant="h6" sx={{mb: 2}}>Τοποθεσία Εκδήλωσης:</Typography>
+              <Box sx={{height: '200px', width: '400px', borderRadius: 2, overflow: 'hidden', border: '1px solid #ddd'}}>
+                <MapContainer center={position} zoom={15} scrollWheelZoom={false} style={{height: '100%', width: '100%'}}>
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -213,8 +279,46 @@ const handleConfirm = async () => {
               </Box> 
             </Box>
           </Box>
-          <Box sx={{ width: '100%', mt: 6, pt: 4, borderTop: '1px solid #eee' }}>
-            <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>Εισιτήρια:</Typography>
+
+          {/* Φωτογραφίες Εκδήλωσης (Εμφανίζεται μόνο αν υπάρχουν παραπάνω από 1) */}
+          {fullEvent.photos && fullEvent.photos.length > 1 && (
+            <Box sx={{width: '100%'}}>
+              <Typography variant="h6" sx={{mb: 2}}>Συλλογή Φωτογραφιών:</Typography>
+              <Box 
+                sx={{
+                  display: 'flex', 
+                  gap: 2, 
+                  overflowX: 'auto', 
+                  // pb: 2, 
+                  // Στυλ για όμορφη μπάρα κύλισης
+                  '&::-webkit-scrollbar': { height: '8px' }, 
+                  '&::-webkit-scrollbar-thumb': { bgcolor: '#c1c1c1', borderRadius: '4px' } 
+               }}
+              >
+                {fullEvent.photos.map((photo, index) => (
+                  <Box
+                    key={photo.id || index}
+                    component="img"
+                    src={`http://localhost:8000/static/uploads/${photo.filename || photo}`}
+                    alt={`${fullEvent.title} - photo ${index + 1}`}
+                    sx={{
+                      width: 220,
+                      height: 150,
+                      objectFit: 'cover',
+                      borderRadius: 2,
+                      boxShadow: 1,
+                      flexShrink: 0, // Αποτρέπει το "ζούληγμα" των εικόνων
+                      '&:hover': {transform: 'scale(1.02)', transition: '0.2s' }
+                   }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
+
+
+          <Box sx={{width: '100%', mt: 6, pt: 4, borderTop: '1px solid #eee'}}>
+            <Typography variant="h5" fontWeight="bold" sx={{mb: 3}}>Εισιτήρια:</Typography>
             
             {fullEvent.ticket_types && fullEvent.ticket_types.length > 0 ? (
               <Grid container spacing={3}>
@@ -222,7 +326,7 @@ const handleConfirm = async () => {
                   <Grid item xs={12} sm={6} md={4} key={ticket.ticket_type_id}>
                     <Card 
                       variant="outlined" 
-                      sx={{ 
+                      sx={{
                         borderRadius: 2, 
                         p: 2, 
                         display: 'flex', 
@@ -232,16 +336,16 @@ const handleConfirm = async () => {
                         borderLeft: '15px solid',
                         borderLeftColor: availabilityColor(ticket.available, ticket.quantity),
                         bgcolor: 'white',
-                      }}
+                     }}
                     >
-                      <Box sx={{ flexGrow: 1 }}>
+                      <Box sx={{flexGrow: 1}}>
                         <Typography variant="h6" fontWeight="bold">{ticket.name}</Typography>
-                        <Typography variant="h4" fontWeight="bold" sx={{ color: '#1976d2', mt: 1, mb: 1 }}>{ticket.price}€</Typography>
+                        <Typography variant="h4" fontWeight="bold" sx={{color: '#1976d2', mt: 1, mb: 1}}>{ticket.price}€</Typography>
                         
                         <Typography 
                           variant="body2" 
                           fontWeight="bold"
-                          sx={{ color: ticket.available > 0 ? 'success.main' : 'error.main' }}
+                          sx={{color: ticket.available > 0 ? 'success.main' : 'error.main'}}
                         >
                           {ticket.available === 0 && (
                             <Typography variant="body2" color="error.main" fontWeight="bold">Sold Out</Typography>
@@ -250,14 +354,14 @@ const handleConfirm = async () => {
                         </Typography>
                       </Box>
 
-                      {/* <Box sx={{ mt: 3, width: '100%', display: 'flex', alignItems: 'center' }}> */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1}}>
-                          <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ mb: 1 }}>Ποσότητα: </Typography>
+                      {/* <Box sx={{mt: 3, width: '100%', display: 'flex', alignItems: 'center'}}> */}
+                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                          <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{mb: 1}}>Ποσότητα: </Typography>
                             <Select
                               value={selectedTickets[ticket.ticket_type_id] || 0}
                               onChange={(e) => handleTicketsChange(ticket.ticket_type_id, e.target.value)}
-                              // sx={{ mt: 2, mb: 2, minWidth: '40%' }}
-                              sx={{ minWidth: '70px', height: '35px' }}
+                              // sx={{mt: 2, mb: 2, minWidth: '40%'}}
+                              sx={{minWidth: '70px', height: '35px'}}
                               disabled={ticket.available === 0}
                             >
                               {/* {[...Array(Math.min(11, ticket.available + 1)).keys()].map(num => (
@@ -277,7 +381,7 @@ const handleConfirm = async () => {
                             </Select>
                         {/* </Box> */}
                       </Box>
-                      <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ mt: 1 }}>Σύνολο: {(selectedTickets[ticket.ticket_type_id] || 0) * ticket.price}€</Typography>
+                      <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{mt: 1}}>Σύνολο: {(selectedTickets[ticket.ticket_type_id] || 0) * ticket.price}€</Typography>
                     </Card>
                   </Grid>
                 ))}
@@ -286,8 +390,8 @@ const handleConfirm = async () => {
                 <Typography variant="body1" color="text.secondary">Δεν υπάρχουν διαθέσιμα εισιτήρια αυτή τη στιγμή.</Typography>
               )}
           </Box>
-            <Typography variant="h5" sx={{ alignSelf: 'center' }}> Σύνολο: {grandtotal}€</Typography>
-            <Button variant="contained" sx={{ ...buttonStyle, borderRadius: 1, alignSelf: 'center' }} onClick={handleBooking} disabled={grandtotal === 0}>
+            <Typography variant="h5" sx={{alignSelf: 'center'}}> Σύνολο: {grandtotal}€</Typography>
+            <Button variant="contained" sx={{...buttonStyle, borderRadius: 1, alignSelf: 'center'}} onClick={handleBooking} disabled={grandtotal === 0}>
               ΚΡΑΤΗΣΗ ΕΙΣΙΤΗΡΙΩΝ
             </Button>
             
@@ -299,8 +403,8 @@ const handleConfirm = async () => {
                   Συνολικό Κόστος: <b>{grandtotal}</b>€
                 </DialogContentText>
               </DialogContent>
-              <DialogActions sx={{ p: 2 }}>
-                <Button onClick={() => setOpenConfirmDialog(false)} color="primary">
+              <DialogActions sx={{p: 2}}>
+                <Button sx={{mr: 1}} onClick={() => setOpenConfirmDialog(false)} color="primary">
                   ΑΚΥΡΩΣΗ
                 </Button>
                 <Button onClick={handleConfirm} color="primary" variant="contained">

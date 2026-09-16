@@ -10,6 +10,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
+from sqlalchemy import func
 
 # Import our custom modules
 import models
@@ -380,6 +381,24 @@ def list_my_events(
     )
     total = query.count()
     events = query.offset((page - 1) * page_size).limit(page_size).all()
+
+    items = []
+    for e in events:
+        # 1. Υπολογισμός συνολικών εισιτηρίων από τη βάση δεδομένων
+        total_tickets = db.query(func.sum(models.Booking.number_of_tickets))\
+                          .filter(models.Booking.event_id == e.event_id)\
+                          .scalar() or 0
+        
+        # 2. Μετατροπή της περίληψης σε dictionary
+        summary = crud.serialize_event_summary(e)
+        if not isinstance(summary, dict):
+            # Συμβατότητα με Pydantic v1 (dict) και v2 (model_dump)
+            summary = summary.model_dump() if hasattr(summary, "model_dump") else summary.dict()
+            
+        # 3. Εισαγωγή του πεδίου 
+        summary["total_booked"] = total_tickets
+        items.append(summary)
+
     return {
         "items": [crud.serialize_event_summary(e) for e in events],
         "total": total,

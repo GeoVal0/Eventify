@@ -79,6 +79,45 @@ export const getUsers = () => {
 };
 
 //ADMIN
+// Admin-only data export (assignment §12, DTD in §7). Two separate
+// functions rather than one, because the two response shapes aren't alike:
+// XML comes back as a raw file with a Content-Disposition attachment
+// header, which fetchWithAuth can't handle (it always calls
+// response.json(), which would throw trying to parse XML) -- so this does
+// its own authenticated fetch and triggers the browser download directly.
+// JSON comes back as a plain JSON body (no attachment header at all), so
+// that one downloads client-side instead, for a consistent "export" UX
+// between the two formats.
+const triggerBlobDownload = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+export const exportEventsXml = async () => {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`${API_BASE_URL}/api/admin/events/export?format=xml`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Request failed with status ${response.status}`);
+  }
+  const blob = await response.blob();
+  triggerBlobDownload(blob, 'events_export.xml');
+};
+
+export const exportEventsJson = async () => {
+  const data = await fetchWithAuth('/api/admin/events/export?format=json');
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  triggerBlobDownload(blob, 'events_export.json');
+};
+
 export const approveUser = (userId) => {
   return fetchWithAuth(`/api/admin/users/${userId}/approve`, { method: 'PUT' });
 };
@@ -134,6 +173,13 @@ export const cancelEvent = (eventId) => {
 // real dedicated backend endpoint, not something built by looping sendMessage.
 export const notifyCancellation = (eventId) => {
   return fetchWithAuth(`/api/events/${eventId}/notify-cancellation`, { method: 'POST' });
+};
+
+// Confirmed against main.py: DELETE /api/events/{event_id}/photos/{photo_id},
+// organizer-only, 204 on success. photo_id comes from EventResponse.photos[i].id
+// (schemas.PhotoResponse) -- not the filename.
+export const deleteEventPhoto = (eventId, photoId) => {
+  return fetchWithAuth(`/api/events/${eventId}/photos/${photoId}`, { method: 'DELETE' });
 };
 
 export const deleteEvent = (eventId) => {

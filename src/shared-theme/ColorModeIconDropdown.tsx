@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import IconButton, { IconButtonOwnProps } from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { useColorScheme } from '@mui/material/styles';
+import {useColorScheme } from '@mui/material/styles';
 
 export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
   const { mode, systemMode, setMode } = useColorScheme();
@@ -70,9 +70,9 @@ export default function ColorModeIconDropdown(props: IconButtonOwnProps) {
               my: '4px',
             },
           },
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+       }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top'}}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom'}}
       >
         <MenuItem selected={mode === 'system'} onClick={handleMode('system')}>
           System

@@ -1,4 +1,4 @@
-import { useColorScheme } from '@mui/material/styles';
+import {useColorScheme } from '@mui/material/styles';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 
@@ -13,7 +13,7 @@ export default function ColorModeSelect(props) {
       onChange={(event) => setMode(event.target.value)}
       SelectDisplayProps={{
         'data-screenshot': 'toggle-mode',
-      }}
+     }}
       {...props}
     >
       <MenuItem value="system">System</MenuItem>

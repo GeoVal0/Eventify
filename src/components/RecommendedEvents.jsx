@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Card, CardMedia, CardContent, Chip, CircularProgress } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { getRecommendations, API_BASE_URL } from '../api';
+import {Box, Typography, Card, CardMedia, CardContent, Chip, CircularProgress } from '@mui/material';
+import {useNavigate } from 'react-router-dom';
+import {useAuth } from '../context/AuthContext';
+import {getRecommendations, API_BASE_URL } from '../api';
 
 // Personalized event recommendations (assignment §13): backed by
 // GET /api/recommendations, which trains a fresh Biased Matrix
@@ -63,8 +63,8 @@ export default function RecommendedEvents() {
   };
 
   return (
-    <Box sx={{ width: '100%', py: 3 }}>
-      <Box sx={{ px: { xs: 2, md: 4 }, mb: 2 }}>
+    <Box sx={{width: '100%', py: 3}}>
+      <Box sx={{px: { xs: 2, md: 4 }, mb: 2}}>
         <Typography variant="h5" fontWeight="bold">
           {coldStart ? 'Δημοφιλείς Εκδηλώσεις' : 'Προτάσεις Για Εσάς'}
         </Typography>
@@ -76,7 +76,7 @@ export default function RecommendedEvents() {
       </Box>
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Box sx={{display: 'flex', justifyContent: 'center', py: 4}}>
           <CircularProgress size={28} />
         </Box>
       ) : (
@@ -89,7 +89,7 @@ export default function RecommendedEvents() {
             pb: 1,
             '&::-webkit-scrollbar': { height: 8 },
             '&::-webkit-scrollbar-thumb': { bgcolor: '#ccc', borderRadius: 4 },
-          }}
+         }}
         >
           {events.map((ev) => (
             <Card
@@ -98,8 +98,8 @@ export default function RecommendedEvents() {
               sx={{
                 minWidth: 260, maxWidth: 260, flexShrink: 0, borderRadius: 3,
                 cursor: 'pointer', transition: 'transform 0.15s',
-                '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 },
-              }}
+                '&:hover': {transform: 'translateY(-4px)', boxShadow: 4 },
+             }}
             >
               {ev.cover_photo ? (
                 <CardMedia
@@ -109,7 +109,7 @@ export default function RecommendedEvents() {
                   alt={ev.title}
                 />
               ) : (
-                <Box sx={{ height: 140, bgcolor: '#e3f2fd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={{height: 140, bgcolor: '#e3f2fd', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                   <Typography variant="h4" fontWeight="bold" color="#1976d2">
                     {ev.title ? ev.title.charAt(0).toUpperCase() : 'E'}
                   </Typography>
@@ -120,7 +120,7 @@ export default function RecommendedEvents() {
                 <Typography variant="body2" color="text.secondary" noWrap>
                   {ev.venue}, {ev.city}
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1}}>
                   <Chip label={formatDate(ev.start_datetime)} size="small" />
                   {priceLabel(ev) && (
                     <Typography variant="body2" fontWeight="bold" color="primary.main">

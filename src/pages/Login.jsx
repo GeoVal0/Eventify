@@ -10,15 +10,15 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
-import { styled } from '@mui/material/styles';
+import {styled } from '@mui/material/styles';
 import Alert from '@mui/material/Alert';
 import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import AppTheme from '../shared-theme/AppTheme';
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import {useNavigate, useLocation } from "react-router-dom";
+import {useAuth } from "../context/AuthContext";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -93,13 +93,17 @@ export default function SignIn(props) {
     if (user) {
       const userRole = JSON.parse(localStorage.getItem('user_data'))?.role;
       
-      if (userRole === "ADMIN") {
-        navigate('/admin/UserList', { replace: true });
-      } else {
-        const returnPath = location.state?.from || '/Home';
-        const returnState = location.state?.event ? { event: location.state.event } : {};
-        navigate(returnPath, { state: returnState, replace: true });
-      }
+      // Same logic for every role now: go back to wherever NavBar sent us
+      // from (location.state.from) if there is one, otherwise fall back to
+      // a sensible per-role default. Previously ADMIN skipped this check
+      // entirely and always hardcoded /admin/UserList, which only looked
+      // correct because that happened to be the one admin menu item that's
+      // an actual page.
+      const defaultPath = userRole === "ADMIN" ? '/admin/UserList' : '/Home';
+      const returnPath = location.state?.from || defaultPath;
+      const returnState = location.state?.event ? { event: location.state.event } : {};
+      navigate(returnPath, { state: returnState, replace: true });
+      
     } else {
       setReady(true);
     }
@@ -158,7 +162,7 @@ export default function SignIn(props) {
           <Typography
             component="h1"
             variant="h4"
-            sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', color:'text.primary' }}
+            sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)', color:'text.primary'}}
           >
             Σύνδεση
           </Typography>
@@ -167,7 +171,7 @@ export default function SignIn(props) {
             component="form"
             onSubmit={handleSubmit}
             noValidate
-            sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
+            sx={{display: 'flex', flexDirection: 'column', width: '100%', gap: 2}}
           >
             {formError && <Alert severity="error">{formError}</Alert>}
 
@@ -214,7 +218,7 @@ export default function SignIn(props) {
                       </IconButton>
                     </InputAdornment>
                   ),
-                }}}
+               }}}
                 error={passwordError}
                 helperText={passwordErrorMessage}
                 color={passwordError ? 'error' : 'primary'}
@@ -231,15 +235,15 @@ export default function SignIn(props) {
           </Box>
           <Divider />
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, alignItems: 'center', mt: 3 }}>
-            <Typography sx={{ textAlign: 'center', fontWeight: 'bold' }}>
+          <Box sx={{display: 'flex', flexDirection: 'column', gap: 1.5, alignItems: 'center', mt: 3}}>
+            <Typography sx={{textAlign: 'center', fontWeight: 'bold'}}>
               Δεν έχετε λογαριασμό;
             </Typography>
 
             <Link
               href="/sign-up/SignUpAttendee"
               variant="body2"
-              sx={{ textAlign: 'center', display: 'block',  color: "#000000ff" }}
+              sx={{textAlign: 'center', display: 'block',  color: "#000000ff"}}
             >
               Εγγραφείτε ως Χρήστης
             </Link>
@@ -247,7 +251,7 @@ export default function SignIn(props) {
             <Link
               href="/sign-up/SignUpOrganizer"
               variant="body2"
-              sx={{ textAlign: 'center', display: 'block', color: "#000000ff" }}
+              sx={{textAlign: 'center', display: 'block', color: "#000000ff"}}
             >
               Εγγραφείτε ως Διοργανωτής
             </Link>

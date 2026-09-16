@@ -11,7 +11,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
-import { styled } from '@mui/material/styles';
+import {styled } from '@mui/material/styles';
 import AppTheme from '../../shared-theme/AppTheme';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -27,8 +27,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import {useAuth } from "../../context/AuthContext";
+import {useNavigate } from "react-router-dom";
 
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -300,14 +300,14 @@ const handleSubmit = async (event) => {
           <Typography
             component="h1"
             variant="h4"
-            sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
+            sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
           >
-            Εγγραφή <span style={{ fontSize: '0.6em', fontWeight: 'normal' }}>για Χρήστες</span>
+            Εγγραφή <span style={{fontSize: '0.6em', fontWeight: 'normal'}}>για Χρήστες</span>
           </Typography>
           <Box
             component="form"
             onSubmit={handleSubmit}
-            sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+            sx={{display: 'flex', flexDirection: 'column', gap: 2}}
           >
             <FormControl>
               <FormLabel htmlFor="username">Όνομα Χρήστη</FormLabel>
@@ -346,7 +346,7 @@ const handleSubmit = async (event) => {
                       </IconButton>
                     </InputAdornment>
                   ),
-                }}}
+               }}}
                 error={passwordError}
                 helperText={passwordErrorMessage}
                 color={passwordError ? 'error' : 'primary'}
@@ -376,14 +376,14 @@ const handleSubmit = async (event) => {
                       </IconButton>
                     </InputAdornment>
                   ),}
-                }}
+               }}
                 error={passError}
                 helperText={passErrorMessage}
                 color={passError ? 'error' : 'primary'}
               />
             </FormControl>
             <Stack direction="row" spacing={2}>
-            <FormControl fullWidth sx={{ flex: 2 }}>
+            <FormControl fullWidth sx={{flex: 2}}>
               <FormLabel htmlFor="name">Όνομα</FormLabel>
               <TextField
                 autoComplete="name"
@@ -396,7 +396,7 @@ const handleSubmit = async (event) => {
                 color={nameError ? 'error' : 'primary'}
               />
             </FormControl>
-            <FormControl fullWidth sx={{ flex: 2 }}>
+            <FormControl fullWidth sx={{flex: 2}}>
               <FormLabel htmlFor="email">Επώνυμο</FormLabel>
               <TextField
                 fullWidth
@@ -410,7 +410,7 @@ const handleSubmit = async (event) => {
                 color={lastNameError ? 'error' : 'primary'}
               />
             </FormControl>
-            <FormControl fullWidth sx={{ flex: 1 }} error={genderError}>
+            <FormControl fullWidth sx={{flex: 1}} error={genderError}>
               <FormLabel htmlFor="gender">Φύλο</FormLabel>
               <Select
                 displayEmpty
@@ -423,12 +423,12 @@ const handleSubmit = async (event) => {
                 error={genderError}
                 renderValue={(selected) => {
                   if (!selected || selected.length === 0) {
-                    return <Typography sx={{ color: 'text.secondary', opacity: 0.7 }}>Επιλέξτε Φύλο</Typography>;
+                    return <Typography sx={{color: 'text.secondary', opacity: 0.7}}>Επιλέξτε Φύλο</Typography>;
                   }
                   if (selected === 'male') return 'Άνδρας';
                   if (selected === 'female') return 'Γυναίκα';
                   return 'Άλλο';
-                }}
+               }}
               >
               <MenuItem value="" disabled></MenuItem>
               <MenuItem value="male">Άνδρας</MenuItem>
@@ -470,7 +470,7 @@ const handleSubmit = async (event) => {
             </FormControl>
 
             <Stack direction="row" spacing={2}>
-            <FormControl fullWidth sx={{ flex: 1 }} error={addressError}>
+            <FormControl fullWidth sx={{flex: 1}} error={addressError}>
               <FormLabel htmlFor="address">Διεύθυνση</FormLabel>
               <TextField
                 fullWidth
@@ -519,19 +519,19 @@ const handleSubmit = async (event) => {
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 4 }}
+            sx={{mt: 4}}
           >
             Εγγραφή
           </Button>
 
           </Box>
           <Divider></Divider>
-            <Typography sx={{ textAlign: 'center' }}>
+            <Typography sx={{textAlign: 'center'}}>
               Έχεις ήδη λογαριασμό;{' '}
               <Link
                 href="/login"
                 variant="body2"
-                sx={{ alignSelf: 'center' }}
+                sx={{alignSelf: 'center'}}
               >
                 Συνδέσου
               </Link>

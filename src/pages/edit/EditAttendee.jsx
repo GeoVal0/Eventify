@@ -11,7 +11,7 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
-import { styled } from '@mui/material/styles';
+import {styled } from '@mui/material/styles';
 import AppTheme from '../../shared-theme/AppTheme';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -19,8 +19,8 @@ import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import {useAuth } from "../../context/AuthContext";
+import {useNavigate } from "react-router-dom";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -300,7 +300,7 @@ export default function EditAttendee(props) {
         <CssBaseline enableColorScheme />
         <EditContainer direction="column" justifyContent="center" alignItems="center">
             <CircularProgress />
-            <Typography sx={{ mt: 2 }}>Φόρτωση Προφίλ...</Typography>
+            <Typography sx={{mt: 2}}>Φόρτωση Προφίλ...</Typography>
         </EditContainer>
       </AppTheme>
     );
@@ -312,12 +312,12 @@ export default function EditAttendee(props) {
 
       <EditContainer direction="column" justifyContent="flex-start">
         <Card variant="outlined">
-          <Typography component="h1" variant="h4" sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}>
-            Επεξεργασία <span style={{ fontSize: '0.6em', fontWeight: 'normal' }}>Προφίλ Χρήστη</span>
+          <Typography component="h1" variant="h4" sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}>
+            Επεξεργασία <span style={{fontSize: '0.6em', fontWeight: 'normal'}}>Προφίλ Χρήστη</span>
           </Typography>
 
           {apiError && (
-            <Alert severity="warning" sx={{ mt: 1, mb: 1, fontWeight: 'bold' }}>
+            <Alert severity="warning" sx={{mt: 1, mb: 1, fontWeight: 'bold'}}>
               {apiError}
             </Alert>
           )}
@@ -325,7 +325,7 @@ export default function EditAttendee(props) {
           <Box
             component="form"
             onSubmit={handleSave}
-            sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+            sx={{display: 'flex', flexDirection: 'column', gap: 2}}
           >
             {/* username cannot be changed */}
             <FormControl>
@@ -336,7 +336,7 @@ export default function EditAttendee(props) {
                 value={username}
                 disabled
                 variant="outlined"
-                sx={{ bgcolor: '#f9f9f9' }}
+                sx={{bgcolor: '#f9f9f9'}}
               />
             </FormControl>
 
@@ -364,7 +364,7 @@ export default function EditAttendee(props) {
                       </IconButton>
                     </InputAdornment>
                   ),
-                }}}
+               }}}
                 error={passwordError}
                 helperText={passwordErrorMessage}
                 color={passwordError ? 'error' : 'primary'}
@@ -395,7 +395,7 @@ export default function EditAttendee(props) {
                       </IconButton>
                     </InputAdornment>
                   ),}
-                }}
+               }}
                 error={passError}
                 helperText={passErrorMessage}
                 color={passError ? 'error' : 'primary'}
@@ -404,7 +404,7 @@ export default function EditAttendee(props) {
 
             {/* name, last name, gender */}
             <Stack direction="row" spacing={2}>
-              <FormControl fullWidth sx={{ flex: 2 }}>
+              <FormControl fullWidth sx={{flex: 2}}>
                 <FormLabel htmlFor="firstName">Όνομα</FormLabel>
                 <TextField
                   fullWidth
@@ -417,7 +417,7 @@ export default function EditAttendee(props) {
                   color={nameError ? 'error' : 'primary'}
                 />
               </FormControl>
-              <FormControl fullWidth sx={{ flex: 2 }}>
+              <FormControl fullWidth sx={{flex: 2}}>
                 <FormLabel htmlFor="lastName">Επώνυμο</FormLabel>
                 <TextField
                   fullWidth
@@ -431,7 +431,7 @@ export default function EditAttendee(props) {
                   color={lastNameError ? 'error' : 'primary'}
                 />
               </FormControl>
-              <FormControl fullWidth sx={{ flex: 1 }} error={genderError}>
+              <FormControl fullWidth sx={{flex: 1}} error={genderError}>
                 <FormLabel htmlFor="gender">Φύλο</FormLabel>
                 <Select
                   displayEmpty
@@ -442,11 +442,11 @@ export default function EditAttendee(props) {
                   variant="outlined"
                   error={genderError}
                   renderValue={(selected) => {
-                    if (!selected || selected.length === 0) return <Typography sx={{ color: 'text.secondary', opacity: 0.7 }}>Επιλέξτε</Typography>;
+                    if (!selected || selected.length === 0) return <Typography sx={{color: 'text.secondary', opacity: 0.7}}>Επιλέξτε</Typography>;
                     if (selected === 'male') return 'Άνδρας';
                     if (selected === 'female') return 'Γυναίκα';
                     return 'Άλλο';
-                  }}
+                 }}
                 >
                   <MenuItem value="" disabled></MenuItem>
                   <MenuItem value="male">Άνδρας</MenuItem>
@@ -466,7 +466,7 @@ export default function EditAttendee(props) {
                 value={email}
                 disabled
                 variant="outlined"
-                sx={{ bgcolor: '#f9f9f9' }}
+                sx={{bgcolor: '#f9f9f9'}}
               />
             </FormControl>
 
@@ -488,7 +488,7 @@ export default function EditAttendee(props) {
 
             {/* address and zip code */}
             <Stack direction="row" spacing={2}>
-              <FormControl fullWidth sx={{ flex: 1 }} error={addressError}>
+              <FormControl fullWidth sx={{flex: 1}} error={addressError}>
                 <FormLabel htmlFor="address">Διεύθυνση</FormLabel>
                 <TextField
                   fullWidth
@@ -527,30 +527,30 @@ export default function EditAttendee(props) {
                 value={afm}
                 disabled
                 variant="outlined"
-                sx={{ bgcolor: '#f9f9f9' }}
+                sx={{bgcolor: '#f9f9f9'}}
               />
             </FormControl>
 
             {/* save and cancel buttons */}
-            <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{mt: 3, display: 'flex', flexDirection: 'column', gap: 1}}>
               <Button type="submit" fullWidth variant="contained" size="large"
-              sx={{ 
+              sx={{
                   background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important',
                   fontWeight: 'bold', 
                   color: 'white',
                   border: '1px solid #2e7d32',
                   boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
-                }}>
+               }}>
                 Αποθήκευση Αλλαγών
               </Button>
               <Button type="button" fullWidth variant="outlined" size="large"
-              sx={{ 
+              sx={{
                 background: 'linear-gradient(to bottom, #8a8c8aff, #525151ff) !important',
                 fontWeight: 'bold', 
                 color: 'white',
                 border: '1px solid #3e3e3eff',
                 boxShadow: '0 3px 5px 2px rgba(47, 52, 47, 0.3)',
-              }}
+             }}
                 onClick={() => navigate("/Home")}>
                 Ακύρωση
               </Button>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { AppBar, Toolbar, Box, Button, Menu, MenuItem, Divider } from "@mui/material";
+import {useNavigate, useLocation } from "react-router-dom";
+import {useAuth } from "../context/AuthContext";
+import {AppBar, Toolbar, Box, Button, Menu, MenuItem, Divider, IconButton, Badge } from "@mui/material";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PersonIcon from '@mui/icons-material/Person';
+import EmailIcon from '@mui/icons-material/Email';
+import {getMessages, exportEventsXml, exportEventsJson } from '../api';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -24,6 +26,34 @@ export default function Navbar() {
   };
 
   const [activeButton, setActiveButton] = useState(getActiveButtonFromPath());
+
+  // Unread-messages badge -- moved here from the standalone floating
+  // MessagesNavIndicator now that NavBar.jsx is available to wire it into
+  // directly, as a plain icon + badge alongside the other nav items.
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+    let cancelled = false;
+    const fetchUnread = async () => {
+      try {
+        const data = await getMessages();
+        const inbox = data?.items || data || [];
+        if (!cancelled) setUnreadCount(inbox.filter((m) => !m.is_read).length);
+      } catch (error) {
+        console.error("Failed to fetch unread message count:", error);
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000); // poll for new messages while navigating
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [user]);
 
   useEffect(() => {
     setActiveButton(getActiveButtonFromPath());
@@ -58,12 +88,14 @@ export default function Navbar() {
     handleOrganizerClose();
     
     if (!user) {
-      // Not logged in -> Go to login
-      navigate("/login");
+      // Not logged in -> Go to login, remembering where we were headed so
+      // Login.jsx can send them back here afterward instead of some
+      // hardcoded default.
+      navigate("/login", { state: { from: path } });
     } else if (user.role !== "ORGANIZER") {
       // Logged in as admin -> Force logout so they can switch accounts, then go to login
       logout();
-      navigate("/login");
+      navigate("/login", { state: { from: path } });
     } else {
       // Logged in as Organizer -> Proceed normally
       navigate(path);
@@ -75,21 +107,47 @@ export default function Navbar() {
     handleAdminClose();
     
     if (!user) {
-      navigate("/login");
+      navigate("/login", { state: { from: path } });
     } else if (user.role !== "ADMIN") {
       logout();
-      navigate("/login");
+      navigate("/login", { state: { from: path } });
     } else {
       navigate(path);
     }
   };
+  
+  // Same role gate as handleAdminNavigation, but triggers a file download
+  // instead of a route change.
+  const handleExportEvents = async (format) => {
+    handleAdminClose();
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (user.role !== "ADMIN") {
+      logout();
+      navigate("/login");
+      return;
+    }
+    try {
+      if (format === 'xml') {
+        await exportEventsXml();
+      } else {
+        await exportEventsJson();
+      }
+    } catch (error) {
+      console.error(`Failed to export events as ${format}:`, error);
+      alert(`Αποτυχία εξαγωγής εκδηλώσεων: ${error.message}`);
+    }
+  };
 
   return (
-    <AppBar position="sticky" sx={{ bgcolor: 'white', color: 'black', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', px: { xs: 2, md: 4 } }}>
+    <AppBar position="sticky" sx={{bgcolor: 'white', color: 'black', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'}}>
+      <Toolbar sx={{display: 'flex', justifyContent: 'space-between', px: { xs: 2, md: 4 }}}>
         
         {/* Left Side: Logo and Links */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
           <Box 
             component="img"
             src="/logo.svg"
@@ -97,13 +155,13 @@ export default function Navbar() {
             onClick={() => {
               navigate("/Home");
               setActiveButton(null);
-            }}
-            sx={{ height: 40, cursor: 'pointer', mr: 2 }}
+           }}
+            sx={{height: 40, cursor: 'pointer', mr: 2}}
           />
         </Box>
 
         {/* Right Side: Auth Actions */}
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Box sx={{display: 'flex', gap: 2, alignItems: 'center'}}>
           
           {/* Organizer Dropdown */}
           <Button 
@@ -117,12 +175,12 @@ export default function Navbar() {
             anchorEl={organizerAnchorEl}
             open={Boolean(organizerAnchorEl)}
             onClose={handleOrganizerClose}
-            PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 180 } }}
+            PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 180 }}}
           >
-            <MenuItem onClick={() => { handleOrganizerNavigation("/organizer/NewEvent"); }}>
+            <MenuItem onClick={() => handleOrganizerNavigation("/organizer/NewEvent") }>
               Νέα Εκδήλωση
             </MenuItem>
-            <MenuItem onClick={() => { handleOrganizerNavigation("/organizer/EventHistory"); }}>
+            <MenuItem onClick={() => { handleOrganizerNavigation("/organizer/EventHistory");}}>
               Ιστορικό Εκδηλώσεων
             </MenuItem>
           </Menu>
@@ -139,10 +197,18 @@ export default function Navbar() {
             anchorEl={adminAnchorEl}
             open={Boolean(adminAnchorEl)}
             onClose={handleAdminClose}
-            PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 180 } }}
+            PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 180 }}}
           >
             <MenuItem onClick={() => handleAdminNavigation("/admin/UserList") }>
               Διαχείριση Χρηστών
+            </MenuItem>
+
+            <Divider />
+            <MenuItem onClick={() => handleExportEvents('xml')}>
+              Εξαγωγή Εκδηλώσεων (XML)
+            </MenuItem>
+            <MenuItem onClick={() => handleExportEvents('json')}>
+              Εξαγωγή Εκδηλώσεων (JSON)
             </MenuItem>
           </Menu>
 
@@ -150,7 +216,7 @@ export default function Navbar() {
             orientation="vertical" 
             variant="middle" 
             flexItem 
-            sx={{ borderColor: '#e0e0e0', my: 0.5, mx: 1 }} 
+            sx={{borderColor: '#e0e0e0', my: 0.5, mx: 1}} 
           />
 
           {!user ? (
@@ -159,7 +225,7 @@ export default function Navbar() {
               <Button 
                 endIcon={<KeyboardArrowDownIcon />} 
                 onClick={handleRegisterClick}
-                sx={{ color: 'text.primary', fontWeight: 'bold' }}
+                sx={{color: 'text.primary', fontWeight: 'bold'}}
               >
                 ΕΓΓΡΑΦΗ
               </Button>
@@ -167,12 +233,12 @@ export default function Navbar() {
                 anchorEl={registerAnchorEl}
                 open={Boolean(registerAnchorEl)}
                 onClose={handleRegisterClose}
-                PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 150 } }}
+                PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 150 }}}
               >
-                <MenuItem onClick={() => { handleRegisterClose(); navigate("/sign-up/SignUpAttendee"); }}>
+                <MenuItem onClick={() => { handleRegisterClose(); navigate("/sign-up/SignUpAttendee");}}>
                   Χρήστης
                 </MenuItem>
-                <MenuItem onClick={() => { handleRegisterClose(); navigate("/sign-up/SignUpOrganizer"); }}>
+                <MenuItem onClick={() => { handleRegisterClose(); navigate("/sign-up/SignUpOrganizer");}}>
                   Διοργανωτής
                 </MenuItem>
               </Menu>
@@ -181,7 +247,7 @@ export default function Navbar() {
               <Button 
                 variant="contained" 
                 color="primary" 
-                sx={{ borderRadius: 5, px: 3, fontWeight: 'bold' }}
+                sx={{borderRadius: 5, px: 3, fontWeight: 'bold'}}
                 onClick={() => navigate("/login")}
               >
                 ΣΥΝΔΕΣΗ
@@ -189,13 +255,24 @@ export default function Navbar() {
             </>
           ) : (
             <>
+            
+              {/* Messages badge
+              <IconButton
+                onClick={() => navigate('/messages')}
+                sx={{color: location.pathname === '/messages' ? 'primary.main' : 'text.primary'}}
+              >
+                <Badge badgeContent={unreadCount} color="error">
+                  <EmailIcon />
+                </Badge>
+              </IconButton> */}
+
               {/* User Menu Dropdown */}
               <Button
                 variant="outlined"
                 startIcon={<PersonIcon />}
                 endIcon={<KeyboardArrowDownIcon />}
                 onClick={handleUserMenuClick}
-                sx={{ borderRadius: 5, fontWeight: 'bold', borderColor: '#ccc', color: 'text.primary' }}
+                sx={{borderRadius: 5, fontWeight: 'bold', borderColor: '#ccc', color: 'text.primary'}}
               >
                 {user.name || user.username || "Προφίλ"}
               </Button>
@@ -203,7 +280,7 @@ export default function Navbar() {
                 anchorEl={userMenuAnchorEl}
                 open={Boolean(userMenuAnchorEl)}
                 onClose={handleUserMenuClose}
-                PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 200 } }}
+                PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 200 }}}
               >
                 {user.role !== "ADMIN" && (
                   <MenuItem onClick={() => {
@@ -213,7 +290,7 @@ export default function Navbar() {
                     } else if (user.role === "ATTENDEE") {
                       navigate("/edit/EditAttendee");
                     }
-                  }}>
+                 }}>
                     Επεξεργασία Προφίλ
                   </MenuItem>
                 )}
@@ -221,7 +298,7 @@ export default function Navbar() {
                   handleUserMenuClose();
                   logout();
                   navigate("/Home");
-                }}>
+               }}>
                   Αποσύνδεση
                 </MenuItem>
               </Menu>

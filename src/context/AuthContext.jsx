@@ -1,4 +1,4 @@
-// import { createContext, useContext, useState } from 'react';
+//import {createContext, useContext, useState } from 'react';
 
 // // 1. Create the context
 // const AuthContext = createContext();
@@ -39,8 +39,8 @@
 
 
 
-import { createContext, useContext, useState, useEffect } from 'react';
-import { loginUser } from '../api'; // Adjust the import path as needed
+import {createContext, useContext, useState, useEffect } from 'react';
+import {loginUser } from '../api'; // Adjust the import path as needed
 
 const AuthContext = createContext(); //
 
@@ -88,7 +88,7 @@ export function AuthProvider({ children }) { //[cite: 16]
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout}}>
       {children}
     </AuthContext.Provider> //[cite: 16]
   );

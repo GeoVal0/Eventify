@@ -125,6 +125,15 @@ class TicketTypeResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class PhotoResponse(BaseModel):
+    """
+    Includes id (not just filename) specifically so the frontend can call
+    DELETE /api/events/{event_id}/photos/{photo_id} for a *particular*
+    photo -- the filename alone isn't enough to target one for removal.
+    """
+    id: int
+    filename: str
+
 # ==========================================
 # Event Schemas
 # ==========================================
@@ -183,6 +192,7 @@ class EventSummary(BaseModel):
     country: str
     start_datetime: datetime
     status: EventStatus
+    total_booked: int = 0
     min_price: Optional[float] = None
     max_price: Optional[float] = None
     cover_photo: Optional[str] = None
@@ -206,7 +216,7 @@ class EventResponse(BaseModel):
     description: str
     organizer_id: int
     organizer_name: str
-    photos: List[str] = []
+    photos: List[PhotoResponse] = []
     ticket_types: List[TicketTypeResponse]
 
 class PaginatedEvents(BaseModel):

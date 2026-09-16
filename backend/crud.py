@@ -325,7 +325,7 @@ def serialize_event(event: models.Event) -> dict:
         "description": event.description,
         "organizer_id": event.organizer_id,
         "organizer_name": event.organizer.username,
-        "photos": [p.filename for p in event.photos],
+        "photos": [{"id": p.id, "filename": p.filename} for p in event.photos],
         "ticket_types": [serialize_ticket_type(t) for t in event.ticket_types],
     }
 
@@ -342,6 +342,12 @@ def serialize_event_summary(event: models.Event) -> dict:
         "city": event.city,
         "country": event.country,
         "start_datetime": event.start_datetime,
+# Same computation as serialize_event -- this was previously
+        # omitted here, so EventSummary.total_booked (which defaults to 0
+        # in schemas.py) silently rendered 0 for every event on any screen
+        # using the summary shape (e.g. EventHistory), even with real
+        # bookings, instead of erroring.
+        "total_booked": sum(t.quantity - t.available for t in event.ticket_types),
         "status": event.status.value,
         "min_price": min(prices) if prices else None,
         "max_price": max(prices) if prices else None,

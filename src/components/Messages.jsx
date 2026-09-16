@@ -1,54 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Fab, Paper, Box, Typography, IconButton, Tabs, Tab, 
-  List, ListItem, ListItemText, Divider, Badge, TextField, Button, CircularProgress, Select, MenuItem, FormControl, InputLabel, ToggleButtonGroup, ToggleButton
-} from '@mui/material';
-
+import {Paper, Box, Typography, IconButton, Tabs, Tab, List, ListItem, ListItemText, Divider, Badge, TextField, Button, CircularProgress, Select, MenuItem, FormControl, InputLabel, ToggleButtonGroup, ToggleButton} from '@mui/material';
 import AppTheme from '../shared-theme/AppTheme';
-import EmailIcon from '@mui/icons-material/Email';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
-import { useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { getMessages, getSentMessages, sendMessage, markMessageAsRead, deleteMessage, fetchWithAuth, getEventDetail, getMyEvents, getEventBookings } from '../api'; 
+import {useLocation } from 'react-router-dom';
+import {useAuth } from '../context/AuthContext';
+import {getMessages, getSentMessages, sendMessage, markMessageAsRead, deleteMessage, fetchWithAuth, getEventDetail, getMyEvents, getEventBookings } from '../api'; 
 
 export default function Messages(props) {
   const { user } = useAuth();
   const location = useLocation();
-  // const [isOpen, setIsOpen] = useState(false);
   const [currentFolder, setCurrentFolder] = useState(0); // 0: Εισερχόμενα, 1: Απεσταλμένα, 2: Νέο
-    const [inbox, setInbox] = useState([]);
-    const [sent, setSent] = useState([]);
-    const [messagesLoading, setMessagesLoading] = useState(false);
-    const [messagesError, setMessagesError] = useState(null);
-  // const [messages, setMessages] = useState([]);
-  // const [loading, setLoading] = useState(false);
+  const [inbox, setInbox] = useState([]);
+  const [sent, setSent] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messagesError, setMessagesError] = useState(null);
 
   // "As attendee": message the organizer of an event you've booked
   const [bookedEvents, setBookedEvents] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState(null);
   const [selectedEventId, setSelectedEventId] = useState('');
-  // const [messageSubject, setMessageSubject] = useState('');
-  // const [messageBody, setMessageBody] = useState('');
-  // const [sending, setSending] = useState(false);
   // "As organizer": message an attendee of an event you organize
-    const [organizerEvents, setOrganizerEvents] = useState([]);
-    const [organizerEventsLoading, setOrganizerEventsLoading] = useState(false);
-    const [organizerEventsError, setOrganizerEventsError] = useState(null);
-    const [selectedOrganizerEventId, setSelectedOrganizerEventId] = useState('');
-    const [attendees, setAttendees] = useState([]);
-    const [attendeesLoading, setAttendeesLoading] = useState(false);
-    const [attendeesError, setAttendeesError] = useState(null);
-    const [attendeesRawSample, setAttendeesRawSample] = useState(null); // temp debug: first raw booking record
-    const [selectedRecipientId, setSelectedRecipientId] = useState('');
+  const [organizerEvents, setOrganizerEvents] = useState([]);
+  const [organizerEventsLoading, setOrganizerEventsLoading] = useState(false);
+  const [organizerEventsError, setOrganizerEventsError] = useState(null);
+  const [selectedOrganizerEventId, setSelectedOrganizerEventId] = useState('');
+  const [attendees, setAttendees] = useState([]);
+  const [attendeesLoading, setAttendeesLoading] = useState(false);
+  const [attendeesError, setAttendeesError] = useState(null);
+  const [selectedRecipientId, setSelectedRecipientId] = useState('');
   
-    // Which compose mode is active. Detected from data, not a guessed role
-    // field on `user` -- whichever list(s) actually come back non-empty
-    // determine what's offered. Someone who's both an attendee and an
-    // organizer gets a toggle between the two.
-    const [composeMode, setComposeMode] = useState(null); // 'attendee' | 'organizer'
+  const [messageSubject, setMessageSubject] = useState('');
+  const [messageBody, setMessageBody] = useState('');
+  const [sending, setSending] = useState(false);
+  
+  // Which compose mode is active. Detected from data, not a guessed role
+  // field on `user` -- whichever list(s) actually come back non-empty
+  // determine what's offered. Someone who's both an attendee and an
+  // organizer gets a toggle between the two.
+  const [composeMode, setComposeMode] = useState(null); // 'attendee' | 'organizer'
 
   const fetchAllMessages = async () => {
     setMessagesLoading(true);
@@ -194,7 +185,6 @@ export default function Messages(props) {
   
   const unreadCount = inbox.filter(msg => !msg.is_read).length;
   const activeMessages = currentFolder === 0 ? inbox : sent;
-  // const setActiveMessages = currentFolder === 0 ? setInbox : setSent;
 
   const handleDelete = async (id, e) => {
     e.stopPropagation();
@@ -231,9 +221,6 @@ export default function Messages(props) {
     setMessageBody('');
   };
 
-  const [messageSubject, setMessageSubject] = useState('');
-  const [messageBody, setMessageBody] = useState('');
-  const [sending, setSending] = useState(false);
   const handleSendAsAttendee = async () => {
     if (!selectedEventId) {
       alert("Παρακαλώ επιλέξτε την εκδήλωση για την οποία θέλετε να στείλετε μήνυμα.");
@@ -259,25 +246,9 @@ export default function Messages(props) {
         body: messageBody,
       };
       const created = await sendMessage(payload);
-
-      // // Show the message in "Απεσταλμένα" immediately instead of waiting on
-      // // a refetch (and in case the "sent" endpoint / list doesn't reliably
-      // // include it right away).
-      // setSent(prev => [
-      //   created && created.id ? created : {
-      //     id: `local-${Date.now()}`,
-      //     event_id: selectedEventId,
-      //     event_title: eventDetails.title,
-      //     recipient_username: eventDetails.organizer_name || eventDetails.organizer_username,
-      //     subject: payload.subject,
-      //     body: payload.body,
-      //     sent_at: new Date().toISOString(),
-      //   },
-      //   ...prev,
-      // ]);
-      // setSelectedEventId('');
-      // setMessageSubject('');
-      // setMessageBody('');
+      // Show the message in "Απεσταλμένα" immediately instead of waiting
+      // on a refetch (and in case the "sent" endpoint / list doesn't
+      // reliably include it right away).
 
       addToSentLocally(created, {
         event_id: selectedEventId,
@@ -350,16 +321,16 @@ export default function Messages(props) {
 
   return (
     <AppTheme {...props}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: { xs: 2, md: 4 }, minHeight: '100vh', bgcolor: 'background.default' }}>
-        <Paper elevation={2} sx={{ width: '100%', maxWidth: 700, borderRadius: 3, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ bgcolor: '#1976d2', color: 'white', p: 2 }}>
+      <Box sx={{display: 'flex', alignItems: 'flex-start', justifyContent: 'center', p: { xs: 2, md: 4 }, minHeight: '100vh', bgcolor: 'background.default'}}>
+        <Paper elevation={2} sx={{width: '100%', maxWidth: 700, borderRadius: 3, overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
+          <Box sx={{bgcolor: '#1976d2', color: 'white', p: 2}}>
             <Typography variant="h6" fontWeight="bold">Μηνύματα</Typography>
           </Box>
 
           <Tabs value={currentFolder} onChange={(e, newValue) => setCurrentFolder(newValue)} variant="fullWidth">
             <Tab
               label={
-                <Badge badgeContent={unreadCount} color="error" sx={{ '& .MuiBadge-badge': { right: -12, top: 2 } }}>
+                <Badge badgeContent={unreadCount} color="error" sx={{'& .MuiBadge-badge': { right: -12, top: 2 }}}>
                   Εισερχόμενα
                 </Badge>
               }
@@ -372,16 +343,16 @@ export default function Messages(props) {
           {(currentFolder === 0 || currentFolder === 1) && (
             <>
               {messagesLoading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <Box sx={{display: 'flex', justifyContent: 'center', py: 4}}>
                   <CircularProgress size={28} />
                 </Box>
               ) : messagesError ? (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <Typography variant="body2" color="error.main" sx={{ mb: 1 }}>{messagesError}</Typography>
+                <Box sx={{textAlign: 'center', py: 3}}>
+                  <Typography variant="body2" color="error.main" sx={{mb: 1}}>{messagesError}</Typography>
                   <Button size="small" onClick={fetchAllMessages}>Δοκιμάστε ξανά</Button>
                 </Box>
               ) : (
-                <List sx={{ bgcolor: '#f9f9f9', p: 0, minHeight: 300 }}>
+                <List sx={{bgcolor: '#f9f9f9', p: 0, minHeight: 300}}>
                   {activeMessages.length > 0 ? (
                     activeMessages.map((msg) => (
                       <React.Fragment key={msg.id}>
@@ -391,10 +362,10 @@ export default function Messages(props) {
                           sx={{
                             bgcolor: !msg.is_read && currentFolder === 0 ? '#e3f2fd' : 'white',
                             borderLeft: !msg.is_read && currentFolder === 0 ? '4px solid #1976d2' : '4px solid transparent'
-                          }}
+                         }}
                           secondaryAction={
                             <IconButton edge="end" onClick={(e) => handleDelete(msg.id, e)}>
-                              <DeleteIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                              <DeleteIcon fontSize="small" sx={{color: 'text.secondary'}} />
                             </IconButton>
                           }
                         >
@@ -423,7 +394,7 @@ export default function Messages(props) {
                       </React.Fragment>
                     ))
                   ) : (
-                    <Typography textAlign="center" color="text.secondary" sx={{ mt: 4, py: 4 }}>
+                    <Typography textAlign="center" color="text.secondary" sx={{mt: 4, py: 4}}>
                       Ο φάκελος είναι άδειος.
                     </Typography>
                   )}
@@ -433,7 +404,7 @@ export default function Messages(props) {
           )}
 
           {currentFolder === 2 && (
-            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{p: 3, display: 'flex', flexDirection: 'column', gap: 2}}>
 
               {canActAsAttendee && canActAsOrganizer && (
                 <ToggleButtonGroup
@@ -455,12 +426,12 @@ export default function Messages(props) {
                   </Typography>
 
                   {bookingsLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                    <Box sx={{display: 'flex', justifyContent: 'center', py: 2}}>
                       <CircularProgress size={24} />
                     </Box>
                   ) : bookingsError ? (
-                    <Box sx={{ textAlign: 'center', py: 1 }}>
-                      <Typography variant="body2" color="error.main" sx={{ mb: 1 }}>{bookingsError}</Typography>
+                    <Box sx={{textAlign: 'center', py: 1}}>
+                      <Typography variant="body2" color="error.main" sx={{mb: 1}}>{bookingsError}</Typography>
                       <Button size="small" onClick={fetchUserBookings}>Δοκιμάστε ξανά</Button>
                     </Box>
                   ) : (
@@ -507,12 +478,12 @@ export default function Messages(props) {
                   </Typography>
 
                   {organizerEventsLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                    <Box sx={{display: 'flex', justifyContent: 'center', py: 2}}>
                       <CircularProgress size={24} />
                     </Box>
                   ) : organizerEventsError ? (
-                    <Box sx={{ textAlign: 'center', py: 1 }}>
-                      <Typography variant="body2" color="error.main" sx={{ mb: 1 }}>{organizerEventsError}</Typography>
+                    <Box sx={{textAlign: 'center', py: 1}}>
+                      <Typography variant="body2" color="error.main" sx={{mb: 1}}>{organizerEventsError}</Typography>
                       <Button size="small" onClick={fetchOrganizerEvents}>Δοκιμάστε ξανά</Button>
                     </Box>
                   ) : (
@@ -524,8 +495,8 @@ export default function Messages(props) {
                         label="Επιλογή Εκδήλωσης"
                         onChange={e => {
                           setSelectedOrganizerEventId(e.target.value);
-                          setSelectedRecipientId(''); // Reset recipient when event changes
-                        }}
+                          setSelectedRecipientId(''); // manual event change
+                       }}
                       >
                         {organizerEvents.map(ev => (
                           <MenuItem key={ev.id} value={ev.id}>{ev.title}</MenuItem>
@@ -536,12 +507,12 @@ export default function Messages(props) {
 
                   {selectedOrganizerEventId && (
                     attendeesLoading ? (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                      <Box sx={{display: 'flex', justifyContent: 'center', py: 2}}>
                         <CircularProgress size={24} />
                       </Box>
                     ) : attendeesError ? (
-                      <Box sx={{ textAlign: 'center', py: 1 }}>
-                        <Typography variant="body2" color="error.main" sx={{ mb: 1 }}>{attendeesError}</Typography>
+                      <Box sx={{textAlign: 'center', py: 1}}>
+                        <Typography variant="body2" color="error.main" sx={{mb: 1}}>{attendeesError}</Typography>
                         <Button size="small" onClick={() => fetchAttendees(selectedOrganizerEventId)}>Δοκιμάστε ξανά</Button>
                       </Box>
                     ) : (
@@ -589,7 +560,7 @@ export default function Messages(props) {
               )}
 
               {composeMode === null && !bookingsLoading && !organizerEventsLoading && (
-                <Typography textAlign="center" color="text.secondary" sx={{ py: 4 }}>
+                <Typography textAlign="center" color="text.secondary" sx={{py: 4}}>
                   Δεν έχετε ενεργές κρατήσεις ή εκδηλώσεις για να στείλετε μήνυμα.
                 </Typography>
               )}

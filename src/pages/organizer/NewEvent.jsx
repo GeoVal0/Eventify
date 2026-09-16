@@ -10,15 +10,15 @@ import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
-import { styled } from "@mui/material/styles";
+import {styled } from "@mui/material/styles";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import AppTheme from "../../shared-theme/AppTheme";
-import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import {useNavigate } from "react-router-dom";
+import {MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { createEvent } from '../../api'; // Adjust path if needed
+import {createEvent } from '../../api';
 
 
 const customIcon = new L.Icon({
@@ -34,7 +34,7 @@ const customIcon = new L.Icon({
 function LocationMarker({ position, setPosition }) {
   useMapEvents({
     click(e) {
-      setPosition(e.latlng); // Updates the coordinates when the map is clicked
+      setPosition(e.latlng); 
     },
   });
   return position === null ? null : (
@@ -72,6 +72,10 @@ const EditContainer = styled(Stack)(({ theme }) => ({
 export default function CreateEvent() {
   const navigate = useNavigate();
   const [apiError, setApiError] = React.useState('');
+  
+  // Φωτογραφίες (Προαιρετικό)
+  const [photos, setPhotos] = React.useState([]);
+
   const [title, setTitle] = React.useState("");
   const [titleError, setTitleError] = React.useState(false);
   const [titleErrorMessage, setTitleErrorMessage] = React.useState('');
@@ -111,35 +115,42 @@ export default function CreateEvent() {
   const [capacity, setCapacity] = React.useState("");
   const [capacityError, setCapacityError] = React.useState(false);
   const [capacityErrorMessage, setCapacityErrorMessage] = React.useState('');
-  const [position, setPosition] = React.useState({ lat: 37.97601, lng: 23.72750 }); // For map marker position
+  const [position, setPosition] = React.useState({ lat: 37.97601, lng: 23.72750 }); 
   const [tickets, setTickets] = React.useState([{ type: '', price: '', quantity: '' } ]);
   const [ticketsError, setTicketsError] = React.useState(false);
   const [ticketsErrorMessage, setTicketsErrorMessage] = React.useState('');
 
-  // Helper 1: Add a new blank ticket to the list
   const handleAddTicket = () => {
     setTickets([...tickets, { type: '', price: '', quantity: '' }]);
   };
 
-  // Helper 2: Remove a specific ticket from the list
   const handleRemoveTicket = (index) => {
     const newTickets = tickets.filter((_, i) => i !== index);
     setTickets(newTickets);
   };
 
-  // Helper 3: Update a specific field inside a specific ticket
   const handleTicketChange = (index, field, value) => {
     const newTickets = [...tickets];
     newTickets[index][field] = value;
     setTickets(newTickets);
   };
 
-  const handleSave = async (e) => {
+  const handlePhotoSelect = (e) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setPhotos((prev) => [...prev, ...selectedFiles]);
+    }
+  };
+
+  const handleRemovePhoto = (index) => {
+    setPhotos(photos.filter((_, i) => i !== index));
+  };
+
+  const handleSave = async (e, status = 'PUBLISHED') => {
     e.preventDefault();
     
     let isValid = true;
 
-    // ERROR MESSAGES FOR ALL FIELDS WHEN EMPTY
     if (!title || title.length < 1){
       setTitleError(true);
       setTitleErrorMessage('Ο Τίτλος είναι υποχρεωτικός.');
@@ -268,43 +279,61 @@ export default function CreateEvent() {
       setTicketsErrorMessage('');
     }
 
-    // If any validation failed, STOP here. Do not save.
-    if (!isValid)
-      return;
+    if (!isValid) return;
 
     const payload = {
       title: title,
       event_type: eventType,
-      categories: [category], // Backend expects an array of strings[cite: 5]
+      categories: [category], 
       venue: venue,
       city: city,
       address: address,
       country: country,
       latitude: position.lat,
       longitude: position.lng,
-      start_datetime: `${date}T${startTime}:00`, // Format: YYYY-MM-DDTHH:MM:SS
+      start_datetime: `${date}T${startTime}:00`, 
       end_datetime: `${date}T${endTime}:00`,
       capacity: parseInt(capacity, 10),
       description: description,
       ticket_types: tickets.map(t => ({
-         name: t.type, // Map 'type' to 'name' as expected by backend schema[cite: 5]
+         name: t.type, 
          price: parseFloat(t.price),
          quantity: parseInt(t.quantity, 10)
-      }))
+      })),
+      status: status
     };
     
-
     try {
       setApiError('');
 
-      await createEvent(payload);
+      // 1. Δημιουργία της εκδήλωσης
+      const createdEvent = await createEvent(payload);
+      const eventId = createdEvent.event_id || createdEvent.id;
+
+      // 2. Ανέβασμα φωτογραφιών (αν έχουν επιλεχθεί)
+      if (photos.length > 0 && eventId) {
+        const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+        
+        for (const photo of photos) {
+          const formData = new FormData();
+          formData.append('file', photo);
+
+          await fetch(`http://localhost:8000/api/events/${eventId}/photos`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+        }
+      }
+
       alert("Η εκδήλωση δημιουργήθηκε επιτυχώς!");
       navigate("/organizer/EventHistory");
       
     } catch (err) {
       console.error(err);
-      // alert("Σφάλμα κατά την αποθήκευση της εκδήλωσης.");
-      setApiError(err.message);
+      setApiError(err.message || "Σφάλμα κατά την αποθήκευση της εκδήλωσης.");
     }
   };
 
@@ -313,10 +342,10 @@ export default function CreateEvent() {
       <CssBaseline enableColorScheme />
       <EditContainer direction="column" justifyContent="flex-start">
         <Card variant="outlined" 
-          sx={{ 
+          sx={{
             backgroundColor: 'white',
             borderColor: '#ddd'
-          }}>
+         }}>
           <Typography component="h1" variant="h4">
             Δημιουργία Νέας Εκδήλωσης
           </Typography>
@@ -325,15 +354,15 @@ export default function CreateEvent() {
             component="form"
             onSubmit={handleSave}
             noValidate
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+            sx={{display: "flex", flexDirection: "column", gap: 2}}
           >
             {apiError && (
-              <Alert severity="error" sx={{ mb: 2}}>
+              <Alert severity="error" sx={{mb: 2}}>
                 {apiError}
               </Alert>
             )}
-            {/* Row 1: Title and Category */}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            
+            <Stack direction={{ xs: 'column', sm: 'row'}} spacing={2}>
               <FormControl fullWidth required>
                 <FormLabel htmlFor="title">Τίτλος Εκδήλωσης</FormLabel>
                 <TextField 
@@ -358,12 +387,15 @@ export default function CreateEvent() {
                   onChange={(e) => setCategory(e.target.value)}
                   variant="outlined"
                   error={categoryError}
-                  helperText={categoryErrorMessage}
                 >
+                  <MenuItem value="" disabled>Επιλέξτε Κατηγορία</MenuItem>
                   <MenuItem value="music">Μουσική</MenuItem>
                   <MenuItem value="theater">Θέατρο</MenuItem>
+                  <MenuItem value="cinema">Σινεμά</MenuItem>
                   <MenuItem value="sports">Αθλητισμός</MenuItem>
+                  <MenuItem value="arts">Τέχνες</MenuItem>
                   <MenuItem value="festival">Φεστιβάλ</MenuItem>
+                  <MenuItem value="seminar">Σεμινάρια</MenuItem>
                 </Select>
                 {categoryError && <FormHelperText>{categoryErrorMessage}</FormHelperText>}
               </FormControl>
@@ -378,19 +410,21 @@ export default function CreateEvent() {
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value)}
                   error={eventTypeError}
-                  helperText={eventTypeErrorMessage}
                 >
-                  <MenuItem value="music">Συναυλία</MenuItem>
-                  <MenuItem value="theater">Θεατρική Παράσταση</MenuItem>
+                  <MenuItem value="" disabled>Επιλέξτε Τύπο</MenuItem>
+                  <MenuItem value="concert">Συναυλία</MenuItem>
+                  <MenuItem value="performance">Θεατρική Παράσταση</MenuItem>
+                  <MenuItem value="screening">Προβολή Ταινίας</MenuItem>
+                  <MenuItem value="match">Αθλητικός Αγώνας</MenuItem>
+                  <MenuItem value="museum">Μουσείο / Έκθεση</MenuItem>
                   <MenuItem value="festival">Φεστιβάλ</MenuItem>
-                  <MenuItem value="seminar">Σεμινάριο</MenuItem>
-                  <MenuItem value="festival">Ημερίδα</MenuItem>
+                  <MenuItem value="seminar">Σεμινάριο / Ημερίδα</MenuItem>
                 </Select>
                 {eventTypeError && <FormHelperText>{eventTypeErrorMessage}</FormHelperText>}
               </FormControl>
             </Stack>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row'}} spacing={2}>
               <FormControl fullWidth required>
                 <FormLabel htmlFor="venue">Χώρος Διεξαγωγής</FormLabel>
                 <TextField 
@@ -405,7 +439,6 @@ export default function CreateEvent() {
               </FormControl>
             </Stack>
 
-            {/* Row 4: Full Address */}
             <FormControl fullWidth>
               <FormLabel htmlFor="address">Διεύθυνση</FormLabel>
               <TextField 
@@ -419,7 +452,7 @@ export default function CreateEvent() {
               />
             </FormControl>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row'}} spacing={2}>
                 <FormControl fullWidth>
                     <FormLabel htmlFor="city">Πόλη</FormLabel>
                     <TextField 
@@ -449,11 +482,11 @@ export default function CreateEvent() {
 
             <FormControl fullWidth>
               <FormLabel>Επιλογή Τοποθεσίας στον Χάρτη</FormLabel>
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{mb: 1}}>
                 Κάντε κλικ στον χάρτη για να αποθηκεύσετε την ακριβή τοποθεσία της εκδήλωσης.
               </Typography>
-              <Box sx={{ height: '300px', width: '100%', borderRadius: 1, overflow: 'hidden', border: '1px solid #ccc', mb: 2 }}>
-                <MapContainer center={[37.9838, 23.7275]} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+              <Box sx={{height: '300px', width: '100%', borderRadius: 1, overflow: 'hidden', border: '1px solid #ccc', mb: 2}}>
+                <MapContainer center={[37.9838, 23.7275]} zoom={13} scrollWheelZoom={true} style={{height: '100%', width: '100%'}}>
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -461,17 +494,9 @@ export default function CreateEvent() {
                   <LocationMarker position={position} setPosition={setPosition} />
                 </MapContainer>
               </Box>
-              {mapError && <FormHelperText error>{mapErrorMessage}</FormHelperText>}
-              
-              {/* Optional: Show the selected coordinates so the user knows it worked */}
-              {/* <Stack direction="row" spacing={2}>
-                <TextField label="Γεωγραφικό Πλάτος (Lat)" size="small" value={position.lat.toFixed(5)} disabled fullWidth />
-                <TextField label="Γεωγραφικό Μήκος (Lng)" size="small" value={position.lng.toFixed(5)} disabled fullWidth />
-              </Stack> */}
             </FormControl>
 
-            {/* Row 2: Date and Time */}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row'}} spacing={2}>
               <FormControl fullWidth required>
                 <FormLabel htmlFor="date">Ημερομηνία</FormLabel>
                 <TextField
@@ -512,19 +537,54 @@ export default function CreateEvent() {
               </FormControl>
             </Stack>
 
-            {/* Row 5: Description */}
             <FormControl fullWidth>
               <FormLabel htmlFor="description">Περιγραφή</FormLabel>
               <TextField 
                 id="description" 
                 fullWidth 
                 multiline
+                rows={3}
                 value={description} 
                 onChange={(e) => setDescription(e.target.value)} 
                 placeholder="Περιγραφή εκδήλωσης"
                 error={descriptionError}
                 helperText={descriptionErrorMessage}
               />
+            </FormControl>
+
+            {/* ΠΡΟΣΘΗΚΗ ΦΩΤΟΓΡΑΦΙΩΝ (ΠΡΟΑΙΡΕΤΙΚΟ) */}
+            <FormControl fullWidth>
+              <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
+                <FormLabel>Φωτογραφίες (Προαιρετικό)</FormLabel>
+                <Button variant="outlined" component="label" size="small">
+                  Επιλογή Φωτογραφιών
+                  <input
+                    type="file"
+                    hidden
+                    multiple
+                    accept="image/jpeg, image/png, image/webp, image/gif"
+                    onChange={handlePhotoSelect}
+                  />
+                </Button>
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{mb: 2}}>
+                Μπορείτε να ανεβάσετε μία ή περισσότερες φωτογραφίες για την εκδήλωσή σας (έως 5MB η καθεμία).
+              </Typography>
+
+              {photos.length > 0 && (
+                <Stack spacing={1}>
+                  {photos.map((photo, index) => (
+                    <Box key={index} sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#f5f5f5', p: 1, borderRadius: 1, border: '1px solid #e0e0e0'}}>
+                      <Typography variant="body2" noWrap sx={{maxWidth: '80%'}}>
+                        {photo.name}
+                      </Typography>
+                      <Button color="error" size="small" onClick={() => handleRemovePhoto(index)}>
+                        Αφαίρεση
+                      </Button>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
             </FormControl>
 
             <FormControl fullWidth>
@@ -540,19 +600,18 @@ export default function CreateEvent() {
               />
             </FormControl>
 
-            {/* --- DYNAMIC TICKETS SECTION --- */}
             <FormControl fullWidth error={ticketsError}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
                 <Typography variant="h6" fontWeight="bold">Κατηγορίες Εισιτηρίων</Typography>
                 <Button variant="outlined" size="small" onClick={handleAddTicket}>
-                  + Προσθήκη νέας κατηγορίας εισιτηρίου
+                  + Προσθήκη νέας κατηγορίας
                 </Button>
               </Box>
 
               {tickets.map((ticket, index) => (
-                <Box key={index} sx={{ p: 2, mb: 2, border: '1px solid #ddd', borderRadius: 2, bgcolor: '#fafafa' }}>
+                <Box key={index} sx={{p: 2, mb: 2, border: '1px solid #ddd', borderRadius: 2, bgcolor: '#fafafa'}}>
                   
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Box sx={{display: 'flex', justifyContent: 'space-between', mb: 2}}>
                     <Typography variant="subtitle2" color="text.secondary">
                       Εισιτήριο #{index + 1}
                     </Typography>
@@ -563,7 +622,7 @@ export default function CreateEvent() {
                     )}
                   </Box>
 
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  <Stack direction={{ xs: 'column', sm: 'row'}} spacing={2}>
                     <FormControl fullWidth>
                       <FormLabel>Τύπος Εισιτηρίου</FormLabel>
                       <TextField 
@@ -599,23 +658,33 @@ export default function CreateEvent() {
                 </Box>
               ))}
               
-              {/* Show error message if any ticket fields are blank */}
               {ticketsError && <FormHelperText >{ticketsErrorMessage}</FormHelperText>}
             </FormControl>
 
-            {/* Action Buttons */}
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Button type="submit" variant="contained" size="large">
-                Δημιουργία Εκδήλωσης
-              </Button>
-
+            <Box sx={{width: '100%', mt: 3, display: 'flex', justifyContent: 'space-between'}}>
               <Button
                 type="button"
                 variant="outlined"
-                onClick={() => navigate("/organizer/EventHistory")}   //????
+                onClick={() => navigate("/organizer/EventHistory")}
               >
                 Ακύρωση
               </Button>
+
+              <Box sx={{display: 'flex', gap: 2}}>
+              <Button type="button" variant="contained" size="large"
+                onClick={(e) => handleSave(e, 'DRAFT')}
+              >
+                Προσωρινή Αποθήκευση
+              </Button>
+
+              <Button type="submit" variant="contained" size="large"
+                sx={{background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important', '&:hover': {bgcolor: '#064a2a' }, px: 4, py: 1, fontWeight: 'bold', textTransform: 'none'}}
+                onClick={(e) => handleSave(e, 'PUBLISHED')}
+              >
+                Δημιουργία Εκδήλωσης
+              </Button>
+              </Box>
+
             </Box>
           </Box>
         </Card>
