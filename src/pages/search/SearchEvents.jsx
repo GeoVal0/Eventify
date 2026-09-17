@@ -34,6 +34,7 @@ const CATEGORY_IMAGES = {
   arts: '/public/6113d70d63ca0-What-is-Fine-Art--Eden-Gallery-.jpeg'
 };
 
+
 const getFallbackImage = (event) => {
   const matchedCategory = (event.categories || []).find(c => CATEGORY_IMAGES[c]);
   if (matchedCategory) return CATEGORY_IMAGES[matchedCategory];
@@ -44,15 +45,13 @@ export default function EventSearchPage(props) {
   const location = useLocation();
   const { user } = useAuth();
 
-  // 1. Instantly read the URL parameter on load
+  // read the URL parameter on load
   const searchParams = new URLSearchParams(location.search);
-  // const initialCategory = searchParams.get('category') || searchParams.get('categories');
 
   const [events, setEvents] = useState([]);
   
-  // Filter States
+  // filter states
   const [selectedAreas, setSelectedAreas] = useState([]);
-  // const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState(
     searchParams.get('category') ? [searchParams.get('category')] : 
     (searchParams.get('categories') ? [searchParams.get('categories')] : [])
@@ -62,13 +61,13 @@ export default function EventSearchPage(props) {
   const [exactSearchDate, setExactSearchDate] = useState(searchParams.get('date') || '');
   const [priceRange, setPriceRange] = useState([0, 1000]);
   
-  // Search Text States
+  // search states
   const [searchTerm, setSearchTerm] = useState(searchParams.get('query') || '');
   const [searchArea, setSearchArea] = useState('');
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
 
 
-  // Keep filters synced if URL changes while already on the page
+  // keep filters synced if URL changes while already on the page
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const cat = params.get('category') || params.get('categories');
@@ -76,22 +75,22 @@ export default function EventSearchPage(props) {
       setSelectedCategories([cat]);
     }
 
-    // Add this to catch the query string from Home.jsx
+    // catches the query string from Home
     const query = params.get('query');
     if (query) {
       setSearchTerm(query);
-
-      setSelectedDateFilter(''); // Clear preset if URL provides exact date
+      setSelectedDateFilter('');
     }
     
-    // (Optional: If you also pass dates from Home, catch them here too)
+    // catches the date from home
     const dateQuery = params.get('date');
     if (dateQuery) {
       setExactSearchDate(dateQuery);
-      setSelectedDateFilter(''); // Clear preset if URL provides exact date
+      setSelectedDateFilter('');
     }
   }, [location.search]);
 
+  // helpers
   const handleAreaChange = (area) => {
     setSelectedAreas((prev) => prev.includes(area) ? prev.filter(a => a !== area) : [...prev, area]);
   };
@@ -116,27 +115,17 @@ export default function EventSearchPage(props) {
     fetchEventData();
   }, []); 
 
-  // --- FILTERING LOGIC ---
+
   const filteredEvents = events.filter((event) => {
     const now = new Date();
     const eventDateObj = new Date(event.start_datetime || event.startDateTime);
     
-    // 1. Hide Past Events
+    // hide past events
     if (isNaN(eventDateObj) || eventDateObj < now) {
       return false;
     }
 
-    // 2. Date Filter
-    // if (selectedDateFilter === 'Σήμερα') {
-    //   if (eventDateObj.toDateString() !== now.toDateString()) return false;
-    // } else if (selectedDateFilter === 'Αύριο') {
-    //   const tomorrow = new Date(now);
-    //   tomorrow.setDate(tomorrow.getDate() + 1);
-    //   if (eventDateObj.toDateString() !== tomorrow.toDateString()) return false;
-    // } else if (selectedDateFilter === 'Αυτή την εβδομάδα') {
-    //   if (getWeekKey(eventDateObj) !== getWeekKey(now)) return false;
-    // }
-    // 2. Date Filter (Exact Date OR Preset)
+    // date filtering
     if (exactSearchDate) {
       const targetDate = new Date(exactSearchDate);
       if (eventDateObj.toDateString() !== targetDate.toDateString()) return false;
@@ -152,20 +141,20 @@ export default function EventSearchPage(props) {
       }
     }
 
-    // 3. Price Filter
+    // ticket price filtering
     const startingPrice = event.min_price !== null && event.min_price !== undefined ? event.min_price : 0;
     if (startingPrice < priceRange[0] || startingPrice > priceRange[1]) return false;
 
-    // 4. Area Filter
+    // area filtering
     const eventCity = event.city || '';
     const eventAddress = event.address || '';
     if (selectedAreas.length > 0 && !selectedAreas.includes(eventCity)) return false;
     
-    const safeAreaSearch = removeAccents(searchArea).trim();
-    if (safeAreaSearch !== '') {
-      const safeCity = removeAccents(eventCity);
-      const safeAddress = removeAccents(eventAddress);
-      if (!safeCity.includes(safeAreaSearch) && !safeAddress.includes(safeAreaSearch)) return false;
+    const areaSearch = removeAccents(searchArea).trim();
+    if (areaSearch !== '') {
+      const city = removeAccents(eventCity);
+      const address = removeAccents(eventAddress);
+      if (!city.includes(areaSearch) && !address.includes(areaSearch)) return false;
     }
 
     // 5. Broad Category Filter (Translates UI Greek strings to Backend English/Greek strings)
@@ -191,19 +180,10 @@ export default function EventSearchPage(props) {
       if (!hasMatchingCategory) return false;
     }
     
-    // Search Category TextField
-    const safeCatSearch = removeAccents(categorySearchTerm).trim();
-    if (safeCatSearch !== '') {
-      const matchesCatText = allEventTags.some(c => removeAccents(c).includes(safeCatSearch));
-      if (!matchesCatText) return false;
-    }
 
-    // 6. Main Text Search
+    // main search bar
     const safeSearch = removeAccents(searchTerm).trim();
     if (safeSearch !== '') {
-      // const eventTitle = event.title || '';
-      // const eventVenue = event.venue || '';
-      // const 
       const matchesMain = removeAccents(event.title).includes(safeSearch) || 
                           removeAccents(event.venue).includes(safeSearch) ||
                           removeAccents(event.city).includes(safeSearch) ||
@@ -242,7 +222,7 @@ export default function EventSearchPage(props) {
         >
         
           <Grid container spacing={4} alignItems="flex-start" justifyContent={!user ? 'center' : 'flex-start'}>
-            {/* FILTERS COLUMN */}
+            {/* filters column */}
             <Grid item xs={12} md={6} sx={{minWidth: 0}}> 
               <Box sx={{
                 bgcolor: 'white', p: 3, borderRadius: 2, boxShadow: 1, 
@@ -286,7 +266,7 @@ export default function EventSearchPage(props) {
                             checked={selectedDateFilter === dateOption && !exactSearchDate}
                             onChange={() => {
                               setSelectedDateFilter(dateOption);
-                              setExactSearchDate(''); // Clear exact date if radio option is picked
+                              setExactSearchDate('');
                            }}
                           />
                         } 
@@ -295,7 +275,6 @@ export default function EventSearchPage(props) {
                         sx={{mb: 0.5, display: 'flex'}} 
                       />
                   ))}
-                  {/* <Box sx={{mb: 3}}> */}
                   <Box sx={{display: 'flex', gap: 2, alignItems: 'center', flexGrow: 1, justifyContent: 'flex-end', flexWrap: 'wrap'}}>
                   <TextField
                     type="date"
@@ -304,7 +283,7 @@ export default function EventSearchPage(props) {
                     value={exactSearchDate}
                     onChange={(e) => {
                       setExactSearchDate(e.target.value);
-                      setSelectedDateFilter(''); // Clear radio options if exact date is picked
+                      setSelectedDateFilter(''); 
                    }}
                     sx={{'& .MuiOutlinedInput-root': { borderRadius: 2 }}}
                   />
@@ -315,7 +294,7 @@ export default function EventSearchPage(props) {
 
                 <Box sx={{mb: 3}}>
                   <Typography fontWeight="bold" sx={{mb: 1, fontSize: '0.9rem'}}>Είδος / Κατηγορία:</Typography>
-                  {['Όλες', 'Μουσική', 'Θέατρο', 'Σινεμά', 'Αθλητισμός', 'Φεστιβάλ', 'Σεμινάρια'].map((category) => (
+                  {['Όλες', 'Μουσική', 'Θέατρο', 'Σινεμά', 'Αθλητισμός', 'Τέχνες', 'Φεστιβάλ', 'Σεμινάρια'].map((category) => (
                       <FormControlLabel 
                       key={category} 
                       control={<Checkbox size="small" checked={selectedCategories.includes(category)} onChange={() => handleCategoryChange(category)} />} 
@@ -324,50 +303,14 @@ export default function EventSearchPage(props) {
                       sx={{mb: 0.5, display: 'flex'}} 
                       />
                   ))}
-                  {/* <Box sx={{display: 'flex', gap: 2, alignItems: 'center', flexGrow: 1, justifyContent: 'flex-end', flexWrap: 'wrap'}}>
-                    <TextField 
-                      placeholder="Αναζήτηση είδους..." 
-                      variant="outlined"
-                      value={categorySearchTerm}
-                      onChange={(e) => setCategorySearchTerm(e.target.value)}
-                      sx={{width: '200px', '& .MuiOutlinedInput-root': { bgcolor: 'white', borderRadius: 5, height: '40px' }}}
-                      InputProps={{ endAdornment: (<InputAdornment position="end"><SearchIcon color="action" /></InputAdornment>)}}
-                    />
-                  </Box>  */}
                 </Box>
 
                 <Divider sx={{mb: 3}} />
-
-                {/* <Box sx={{width: '100%', borderRadius: 1, boxSizing: 'border-box'}}>
-                  <Typography gutterBottom fontWeight="bold" color="text.primary" sx={{fontSize: '0.9rem'}}>
-                    Τιμή Εισιτηρίου: {priceRange[0]}€ - {priceRange[1]}€+
-                  </Typography>
-                  
-                  <Box sx={{px: 2}}>
-                    <Slider
-                      value={priceRange}
-                      onChange={handlePriceChange}
-                      valueLabelDisplay="auto"
-                      min={0}
-                      max={500} 
-                      sx={{
-                        color: '#5ba7fb',
-                        '& .MuiSlider-thumb': {
-                          '&:hover, &.Mui-focusVisible': {
-                            boxShadow: '0px 0px 0px 8px rgb(91 167 251 / 16%)',
-                          },
-                        },
-                     }}
-                    />
-                  </Box>
-                </Box> */}
 
                 <Box sx={{width: '100%', borderRadius: 1, boxSizing: 'border-box'}}>
                   <Typography gutterBottom fontWeight="bold" color="text.primary" sx={{fontSize: '0.9rem', mb: 2}}>
                     Τιμή Εισιτηρίου:
                   </Typography>
-
-                  {/* Πεδία πληκτρολόγησης για ακριβή επιλογή */}
                   <Box sx={{display: 'flex', alignItems: 'center', gap: 2, mb: 1}}>
                     <TextField
                       size="small"
@@ -389,16 +332,14 @@ export default function EventSearchPage(props) {
                       sx={{width: '80px', '& .MuiOutlinedInput-root': { borderRadius: 2 }}}
                     />
                   </Box>
-                  
-                  {/* Slider με βήμα 5€ για πιο εύκολη χρήση */}
+                
                   <Box sx={{px: 2}}>
                     <Slider
                       value={priceRange}
                       onChange={handlePriceChange}
                       valueLabelDisplay="auto"
                       min={0}
-                      max={500} 
-                      // step={5} // Κουμπώνει ανά 5 ευρώ
+                      max={500}
                       sx={{
                         color: '#5ba7fb',
                         '& .MuiSlider-thumb': {
@@ -413,7 +354,7 @@ export default function EventSearchPage(props) {
               </Box>
             </Grid>
 
-            {/* RESULTS COLUMN */}
+            {/* results column */}
             <Grid item xs={12} md={6} sx={{flexGrow: 1}}>
               <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2}}>
                 <Typography variant="h4" fontWeight="bold">Εκδηλώσεις:</Typography>
@@ -454,36 +395,16 @@ export default function EventSearchPage(props) {
                           flexShrink: 0, 
                           boxSizing: 'border-box', 
                           boxShadow: 1, 
-                          transition: 'transform 0.2s, box-shadow 0.2s', // Ομαλό εφέ
-                          cursor: 'pointer', // ΠΡΟΣΘΗΚΗ: Δείχνει το χεράκι
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                          cursor: 'pointer',
                           '&:hover': {
                             transform: 'scale(1.02)',
-                            boxShadow: 4 // Μεγαλώνει ελαφρώς η σκιά για να φαίνεται ότι πατιέται
+                            boxShadow: 4
                           } 
                         }}
                         >
                         <CardContent sx={{display: 'flex', width: '100%', gap: 4, alignItems: 'center', flexDirection: { xs: 'column', sm: 'row' }}}>
-
-                          {/* Image display matching your backend static upload route */}
-                          {/* <Box 
-                            component="img"
-                            src={
-                              event.cover_photo 
-                                ? `http://localhost:8000/static/uploads/${event.cover_photo}` 
-                                : event.photos && event.photos.length > 0 
-                                  ? `http://localhost:8000/static/uploads/${event.photos[0].filename || event.photos[0]}`
-                                  : 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=400&q=80'
-                            }
-                            alt={event.title}
-                            sx={{
-                              width: { xs: '100%', sm: 160 }, 
-                              height: 160, 
-                              objectFit: 'cover', 
-                              borderRadius: 2,
-                              bgcolor: '#5ba7fb' 
-                           }}
-                          /> */}
-
+                        {/* photo */}
                           <Box 
                             component="img"
                             src={
@@ -494,18 +415,16 @@ export default function EventSearchPage(props) {
                                   : getFallbackImage(event)
                             }
                             alt={event.title}
-                            // onClick={() => navigate('/search/BookTickets', {state: {event: event}})}
                             sx={{
                               width: { xs: '100%', sm: 200 }, 
                               height: 170, 
                               objectFit: 'cover', 
                               borderRadius: 2,
                               bgcolor: '#5ba7fb',
-                              // cursor: 'pointer', // Δείχνει το χεράκι όταν περνάει το ποντίκι
-                              // '&:hover': {opacity: 0.8 } // Εφέ hover 
                            }}
                           />
 
+                            {/* event info */}
                           <Box sx={{flex: 1}}>
                             
                             <Typography variant="h6" fontWeight="bold" sx={{color: 'black'}}>

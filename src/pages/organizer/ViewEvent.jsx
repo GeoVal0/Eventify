@@ -3,7 +3,6 @@ import {Box, Typography, Button, Avatar, Card, CardContent, Divider} from '@mui/
 import PersonIcon from '@mui/icons-material/Person';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useLocation, useNavigate} from 'react-router-dom';
-import {useAuth} from '../../context/AuthContext'; 
 import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -14,7 +13,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import {getEventDetail, getEventBookings, cancelEvent, deleteEvent, notifyCancellation} from '../../api';
 
-// Setup Map Icon
+// setup map icon
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -43,7 +42,6 @@ const getFallbackImage = (event) => {
 export default function ViewEvent(props) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user} = useAuth();
   const eventId = location.state?.eventId;
   const [event, setEvent] = useState('null');
   const [bookedUsers, setBookedUsers] = useState([]);
@@ -58,11 +56,12 @@ export default function ViewEvent(props) {
       return;
    }
 
+   // fetches all info and bookings for the selected event
     const fetchData = async () => {
       try {
         const [eventData, bookingsData] = await Promise.all([
-          getEventDetail(eventId), //[cite: 5]
-          getEventBookings(eventId) //[cite: 5]
+          getEventDetail(eventId),
+          getEventBookings(eventId)
         ]);
         setEvent(eventData);
         setBookedUsers(bookingsData);
@@ -77,10 +76,7 @@ export default function ViewEvent(props) {
     fetchData();
  }, [eventId, navigate]);
 
-//   // Helpers
-//   const hasValidLocation = (pos) => {
-//     return pos && typeof pos.lat === 'number' && typeof pos.lng === 'number' && (pos.lat !== 0 || pos.lng !== 0);
-//  };
+ // helpers
 
   const getStatusLabel = (status) => {
     switch (status) {
@@ -117,16 +113,11 @@ export default function ViewEvent(props) {
    }
  };
 
+ // when an event gets cancelled, all the attendees are sent an informing messages
   const handleCancel = async () => {
     setCancelOpenDialog(false);
     try {
-      await cancelEvent(event.event_id); //[cite: 5]
-      // Confirmed against main.py: there's a dedicated backend endpoint for
-      // this (POST /api/events/{event_id}/notify-cancellation). It finds
-      // every distinct attendee for the event and messages them server-side
-      // -- no need to fetch bookedUsers and loop sendMessage per person
-      // ourselves, and no guessing about which field on a booking record
-      // is the right recipient id.
+      await cancelEvent(event.event_id);
       const result = await notifyCancellation(event.event_id);
       alert(`Η εκδήλωση ακυρώθηκε επιτυχώς και ειδοποιήθηκαν ${result?.notified ?? 0} συμμετέχοντες.`);
       navigate('/organizer/EventHistory');
@@ -138,18 +129,17 @@ export default function ViewEvent(props) {
   const handleDelete = async () => {
     setOpenDialog(false);
     try {
-      await deleteEvent(event.event_id); //[cite: 5]
+      await deleteEvent(event.event_id);
       alert("Η εκδήλωση διαγράφηκε επιτυχώς");
       navigate('/organizer/EventHistory');
    } catch (error) {
-      alert(`Σφάλμα κατά τη διαγραφή: ${error.message}`); // Will catch "Cannot delete published event with bookings"[cite: 5]
+      alert(`Σφάλμα κατά τη διαγραφή: ${error.message}`);
    }
  }
 
   if (loading || !event) return <Typography>Φόρτωση...</Typography>;
 
   const { date, time} = formatDateTime(event.start_datetime);
-
   const mapPosition = { lat: event.latitude, lng: event.longitude};
 
   return (
@@ -168,17 +158,14 @@ export default function ViewEvent(props) {
         >
           <Box sx={{width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: 4}}>
             
-            {/* 1. TOP SECTION: THE EVENT DETAILS CARD */}
             <Typography variant="h5" fontWeight="bold" sx={{mb: -2}}>Λεπτομέρειες Εκδήλωσης</Typography>
             
             <Card variant="outlined" sx={{borderRadius: 4, bgcolor: 'white', border: '1px solid #c7c7c7', boxShadow: 'none', overflow: 'hidden'}}>
               <CardContent sx={{display: 'flex', flexDirection: { xs: 'column', md: 'row'}, p: 0}}>
                 
-                {/* Left Side: Map Block */}
-                <Box sx={{
-                  // width: { xs: '100%', md: '350px'}, 
-                  width: { xs: '100%', md: '300px'}, 
-                  // minHeight: '200px',
+                {/* photo */}
+                <Box sx={{ 
+                  width: { xs: '100%', md: '300px'},
                   height: 300,
                   bgcolor: '#e3f2fd', 
                   borderRight: {xs: 'none', md: '1px solid #eee'},
@@ -201,13 +188,10 @@ export default function ViewEvent(props) {
                   />
                 </Box>
 
-              {/* Right Side: Event Info & Buttons */}
                 <Box sx={{flex: 1, p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                  
-                  {/* --- TOP ROW: Details (Left) and Button (Right) --- */}
                   <Box sx={{display: 'flex', flexDirection: { xs: 'column', sm: 'row'}, justifyContent: 'space-between', alignItems: 'flex-start'}}>
                     
-                    {/* Left Side: Event Details */}
+                    {/* event info */}
                     <Box>
                       <Typography variant="h6" fontWeight="bold" sx={{mb: 1}}>
                         {event.title}
@@ -237,11 +221,10 @@ export default function ViewEvent(props) {
                       </Typography>
                     </Box>
 
-                    {/* Right Side: Action Button */}
-                    {/* <Box sx={{mt: { xs: 2, sm: 0}}}> Adds top margin only on mobile screens */}
+                    {/* action buttons */}
                     <Box sx={{p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 1.5, minWidth: '220px', alignItems: 'center'}}>
                       
-                      {/* DRAFT -> Publish Button */}
+                      {/* DRAFT -> publish button */}
                       {event.status === 'DRAFT' && (
                         <Button 
                           variant="contained" fullWidth
@@ -257,8 +240,8 @@ export default function ViewEvent(props) {
                         </Button>
                       )}
 
-                      {/* Not Cancelled -> Edit Button */}
-                      {/* {event.status !== 'CANCELLED' && (
+                      {/* NOT CANCELLED -> edit button */}
+                      {event.status !== 'CANCELLED' && (
                         <Button 
                           variant="contained" fullWidth
                           sx={{
@@ -269,16 +252,16 @@ export default function ViewEvent(props) {
                         }}
                           onClick={() => navigate('/organizer/EditEvent', { state: { eventId: event.event_id}})}
                         >
-                          ΕΠΕΞΕΡΓΑΣΙΑ
+                          ΤΡΟΠΟΠΟΙΗΣΗ ΕΚΔΗΛΩΣΗΣ
                         </Button>
-                      )} */}
+                      )}
 
-                      {/* PUBLISHED -> Cancel Event Button */}
+                      {/* PUBLISHED -> cancel event button */}
                       {event.status === 'PUBLISHED' && (
                         <Button 
                           variant="contained" fullWidth
                           sx={{
-                            background: 'linear-gradient(to bottom, #f57c00, #e65100) !important',
+                            background: 'linear-gradient(to bottom, #ff8848, #dd4d00) !important',
                             borderRadius: 5, px: 4, py: 1.5, fontWeight: 'bold', color: 'white',
                             border: '1px solid #e65100', boxShadow: '0 3px 5px 2px rgba(230, 81, 0, 0.3)',
                             whiteSpace: 'nowrap'
@@ -289,7 +272,7 @@ export default function ViewEvent(props) {
                         </Button>
                       )}
 
-                      {/* DRAFT OR NO BOOKINGS */}
+                      {/* DRAFT OR NO BOOKINGS -> delete event button */}
                       {(event.status === 'DRAFT' || bookedUsers.length === 0) && (
                       <Button 
                         variant="contained" fullWidth
@@ -297,6 +280,7 @@ export default function ViewEvent(props) {
                         sx={{
                           background: 'linear-gradient(to bottom, rgb(245, 55, 74), rgb(129, 39, 39)) !important',
                           borderRadius: 5, px: 4, py: 1.5, fontWeight: 'bold', color: 'white',
+                          border: '1px solid #c50c0c', boxShadow: '0 3px 5px 2px rgba(230, 0, 0, 0.3)',
                           boxShadow: '0 3px 5px 2px rgba(129, 39, 39, .3)', whiteSpace: 'nowrap'
                       }}
                       >
@@ -306,11 +290,10 @@ export default function ViewEvent(props) {
                     </Box>
 
                   </Box>
-                  {/* --- END TOP ROW --- */}
 
                   <Divider sx={{my: 2}} />
 
-                  {/* BOTTOM ROW: Total Tickets */}
+                  {/* total tickets */}
                   <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <Box>
                       <Typography variant="caption" color="text.secondary" fontWeight="bold">ΣΥΝΟΛΙΚΕΣ ΚΡΑΤΗΣΕΙΣ</Typography>
@@ -321,6 +304,7 @@ export default function ViewEvent(props) {
               </CardContent>
             </Card>
 
+              {/* description and map */}
             <Box sx={{display: 'flex', justifyContent: 'space-between', width: '100%', mt: 4, flexDirection: { xs: 'column', md: 'row'}, gap: 4}}>
                         <Box sx={{flex: 1}}>
                           <Typography variant="h6" sx={{mb: 2}}>Περιγραφή Εκδήλωσης: </Typography>
@@ -345,7 +329,7 @@ export default function ViewEvent(props) {
                         </Box>
                       </Box>
 
-            {/* Φωτογραφίες Εκδήλωσης (Εμφανίζεται μόνο αν υπάρχουν παραπάνω από 1) */}
+            {/* photo album, only if 1< photos */}
           {event.photos && event.photos.length > 1 && (
             <Box sx={{width: '100%'}}>
               <Typography variant="h6" sx={{mb: 2}}>Συλλογή Φωτογραφιών:</Typography>
@@ -354,11 +338,10 @@ export default function ViewEvent(props) {
                   display: 'flex', 
                   gap: 2, 
                   overflowX: 'auto', 
-                  pb: 2, 
-                  // Στυλ για όμορφη μπάρα κύλισης
+                  pb: 2,
                   '&::-webkit-scrollbar': { height: '8px'}, 
                   '&::-webkit-scrollbar-thumb': { bgcolor: '#c1c1c1', borderRadius: '4px'} 
-              }}
+                }}
               >
                 {event.photos.map((photo, index) => (
                   <Box
@@ -372,30 +355,16 @@ export default function ViewEvent(props) {
                       objectFit: 'cover',
                       borderRadius: 2,
                       boxShadow: 1,
-                      flexShrink: 0, // Αποτρέπει το "ζούληγμα" των εικόνων
+                      flexShrink: 0,
                       '&:hover': {transform: 'scale(1.02)', transition: '0.2s'}
-                  }}
+                    }}
                   />
                 ))}
               </Box>
             </Box>
           )}
 
-{/* NEW SECTION: MAP DISPLAY
-            {hasValidLocation(mapPosition) && (
-              <Box>
-                <Typography variant="h6" fontWeight="bold" sx={{mb: 2}}>Τοποθεσία</Typography>
-                <Box sx={{height: 200, width: '100%', borderRadius: 4, overflow: 'hidden', border: '1px solid #c7c7c7'}}>
-                  <MapContainer center={[mapPosition.lat, mapPosition.lng]} zoom={15} scrollWheelZoom={false} style={{height: '100%', width: '100%', zIndex: 1}}>
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <Marker position={[mapPosition.lat, mapPosition.lng]} icon={customIcon} />
-                  </MapContainer>
-                </Box>
-              </Box>
-            )} */}
-
-
-            {/* 2. BOTTOM SECTION: THE BOOKED USERS LIST */}
+            {/* booked users list */}
             <Typography variant="h5" fontWeight="bold" sx={{mt: 2, mb: -2}}>
                Λίστα Κρατήσεων ({bookedUsers.length})
             </Typography>
@@ -432,7 +401,7 @@ export default function ViewEvent(props) {
                     </Box>
                   </CardContent>
 
-                    {/* Ticket Info */}
+                    {/* tickets info */}
                     <Box sx={{textAlign: { xs: 'center', sm: 'right'}, borderLeft: { xs: 'none', sm: '1px solid #eee'}, pl: { xs: 0, sm: 3}}}>
                       <Typography variant="caption" color="text.secondary" display="block">ΚΑΤΗΓΟΡΙΑ: {bookedUser.ticket_type_name}</Typography>
                       <Typography variant="h6" fontWeight="bold" color="primary.main">
@@ -440,7 +409,7 @@ export default function ViewEvent(props) {
                       </Typography>
                     </Box>
 
-                    {/* Action Button */}
+                    {/* action button */}
                     <Box sx={{ml: { xs: 0, sm: 2}}}>
                       <Button 
                         variant="outlined" 
@@ -468,6 +437,7 @@ export default function ViewEvent(props) {
         </Box>
       </Box>
 
+      {/* pop up windows */}
       <Dialog
         open={openCancelDialog}
         onClose={handleCancelCloseDialog}
@@ -520,3 +490,5 @@ export default function ViewEvent(props) {
     </AppTheme>
   );
 }
+
+//////////otan patao diagrafi se ena event diagrafetai entelos

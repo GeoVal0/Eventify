@@ -5,7 +5,7 @@ import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import {useNavigate} from 'react-router-dom';
 import AppTheme from '../shared-theme/AppTheme';
 import {useAuth} from '../context/AuthContext';
-import {getEvents, getRecommendations} from '../api'; // Εισαγωγή του API function
+import {getEvents, getRecommendations} from '../api';
 
 const CATEGORY_IMAGES = {
   music: '/public/1061513-taylor-swift-en-concert-a-paris-la-defense-arena-on-y-etait-on-vous-raconte.jpg',
@@ -29,13 +29,7 @@ export default function Home(props) {
   const [events, setEvents] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
 
-
-  // Personalized recommendations (assignment §13, Biased Matrix
-  // Factorization, GET /api/recommendations). Attendee-only on the
-  // backend and requires being logged in -- for guests and
-  // organizers/admins (or if the call fails for any reason) this quietly
-  // falls back to `events` (all events) below, which is what this
-  // carousel already showed before recommendations existed.
+  // personalized recommendations, requires being logged in. else shows all the events
   const [recommendedEvents, setRecommendedEvents] = useState([]);
   const [usingRecommendations, setUsingRecommendations] = useState(false);
   const [coldStart, setColdStart] = useState(false);
@@ -45,7 +39,7 @@ export default function Home(props) {
   const eventsContainerRef = useRef(null);
   const categoriesRef = useRef(null);
 
-  // Φόρτωση δεδομένων από τη βάση κατά την αρχικοποίηση
+  // fetches all events from backend
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -59,7 +53,7 @@ export default function Home(props) {
         });
         setEvents(activeEvents);
 
-        // Define the specific categories we want to show on the homepage
+        // categories for the category carousel
         setCategoriesList(['Μουσική', 'Θέατρο', 'Σινεμά', 'Αθλητισμός', 'Τέχνες', 'Φεστιβάλ', 'Σεμινάρια']);
       } catch (error) {
         console.error("Failed to load events for homepage", error);
@@ -68,10 +62,6 @@ export default function Home(props) {
     fetchInitialData();
   }, []);
 
-  // Separate effect, and deliberately gated on `user`: /api/recommendations
-    // requires auth (attendee role specifically). Calling it while logged
-    // out would 401 -> fetchWithAuth's global handler force-redirects to
-    // /login, which would break the homepage for every guest visitor.
     useEffect(() => {
       if (!user) {
         setUsingRecommendations(false);
@@ -85,19 +75,19 @@ export default function Home(props) {
           setColdStart(!!data.cold_start);
           setUsingRecommendations(true);
         } catch (error) {
-          // Expected for organizers/admins (backend is attendee-only) --
-          // not an error worth surfacing, just fall back to all events.
           console.error("Recommendations unavailable, falling back to all events:", error);
           setUsingRecommendations(false);
         }
       };
       fetchRecommendations();
     }, [user]);
+
+  // helpers
   
-    const displayedEvents = usingRecommendations ? recommendedEvents : events;
-    const recommendedHeading = usingRecommendations
-      ? (coldStart ? 'Δημοφιλείς Εκδηλώσεις' : 'Προτάσεις Για Εσάς')
-      : 'Προτεινόμενες Εκδηλώσεις';
+  const displayedEvents = usingRecommendations ? recommendedEvents : events;
+  const recommendedHeading = usingRecommendations
+    ? (coldStart ? 'Δημοφιλείς Εκδηλώσεις' : 'Προτάσεις Για Εσάς')
+    : 'Προτεινόμενες Εκδηλώσεις';
 
   const handleSearch = () => {
     if (!searchTerm.trim() && !searchDate) return;
@@ -105,7 +95,6 @@ export default function Home(props) {
     if (searchTerm) params.append('query', searchTerm);
     if (searchDate) params.append('date', searchDate);
     
-    // Διορθώθηκε το route για να ταιριάζει με το App.jsx σας
     navigate(`/search/SearchEvents?${params.toString()}`);
   };
 
@@ -139,10 +128,7 @@ export default function Home(props) {
     <AppTheme {...props}>
       <Box sx={{minHeight: '100vh', bgcolor: '#ffffff', pt: 8, pb: 8}}>
         <Container maxWidth="lg">
-          
-          {/* =========================================
-              PART 1: HERO HEADER & SEARCH
-          ========================================= */}
+          {/* header and search bar */}
           <Box sx={{mb: 6}}>
             <Typography variant="h3" component="h1" sx={{fontWeight: 800, mb: 1, color: '#1a1a1a', letterSpacing: '-0.5px'}}>
               Βρες το επόμενο Event που<br />θα παρευρεθείς.
@@ -168,7 +154,6 @@ export default function Home(props) {
               </IconButton>
               <Button 
                 variant="contained" onClick={handleSearch}
-                // sx={{bgcolor: '#198754', '&:hover': {bgcolor: '#157347' }, borderRadius: 2, px: 4, py: 1, fontWeight: 'bold', textTransform: 'none', minWidth: '120px'}}
                 sx={{background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important', '&:hover': {bgcolor: '#064a2a' }, borderRadius: 2, px: 4, py: 1, fontWeight: 'bold', textTransform: 'none', minWidth: '120px'}}
               >
                 Αναζήτηση
@@ -177,10 +162,7 @@ export default function Home(props) {
           </Box>
 
           <Divider sx={{my: 5, borderColor: '#ccc'}} />
-
-          {/* =========================================
-              PART 2: RECOMMENDED EVENTS CAROUSEL
-          ========================================= */}
+            {/* recommended events carousel */}
           <Box sx={{mb: 2}}>
             <Typography variant="h6" sx={{fontWeight: 700, mb: 3, color: '#333'}}>
               {recommendedHeading}
@@ -217,6 +199,7 @@ export default function Home(props) {
                         '&:hover': {transform: 'translateY(-4px)', transition: '0.3s', boxShadow: 4}
                      }} 
                     >
+                      {/* photo */}
                       <CardMedia
                         component="img"
                         height="150"
@@ -228,6 +211,7 @@ export default function Home(props) {
                         alt={event.title}
                         sx={{borderRadius: 1}}
                       />
+                      {/* event info */}
                       <CardContent sx={{flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', p: 1}}>
                         <Typography variant="subtitle1" fontWeight="bold" noWrap>
                           {event.title}
@@ -256,10 +240,7 @@ export default function Home(props) {
           </Box>
 
           <Divider sx={{my: 5, borderColor: '#ccc'}} />
-
-          {/* =========================================
-              PART 3: CATEGORIES CAROUSEL
-          ========================================= */}
+              {/* categories carousel */}
           <Box sx={{mb: 2}}>
             <Typography variant="h6" sx={{fontWeight: 700, mb: 3, color: '#333'}}>
               Κατηγορίες
@@ -314,8 +295,6 @@ export default function Home(props) {
                   );
                 })}
               </Box>
-
-              
               
               <IconButton 
                 onClick={() => scrollCategories('right')} 
@@ -327,9 +306,6 @@ export default function Home(props) {
           </Box>
           <Divider sx={{my: 5, borderColor: '#ccc'}} />
 
-          {/* =========================================
-              PART 4: CALL TO ACTION
-          ========================================= */}
           <Box sx={{mb: 2, textAlign: 'center'}}>
             <Typography variant="h6" sx={{fontWeight: 700, mb: 2, color: '#333'}}>
               Είσαι Διοργανωτής;

@@ -10,18 +10,16 @@ import {getMessages, getSentMessages, sendMessage, markMessageAsRead, deleteMess
 export default function Messages(props) {
   const { user } = useAuth();
   const location = useLocation();
-  const [currentFolder, setCurrentFolder] = useState(0); // 0: Εισερχόμενα, 1: Απεσταλμένα, 2: Νέο
+  const [currentFolder, setCurrentFolder] = useState(0); // 0 -> incoming, 1 -> sent, 2 -> new message
   const [inbox, setInbox] = useState([]);
   const [sent, setSent] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messagesError, setMessagesError] = useState(null);
 
-  // "As attendee": message the organizer of an event you've booked
   const [bookedEvents, setBookedEvents] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState(null);
   const [selectedEventId, setSelectedEventId] = useState('');
-  // "As organizer": message an attendee of an event you organize
   const [organizerEvents, setOrganizerEvents] = useState([]);
   const [organizerEventsLoading, setOrganizerEventsLoading] = useState(false);
   const [organizerEventsError, setOrganizerEventsError] = useState(null);
@@ -34,13 +32,10 @@ export default function Messages(props) {
   const [messageSubject, setMessageSubject] = useState('');
   const [messageBody, setMessageBody] = useState('');
   const [sending, setSending] = useState(false);
-  
-  // Which compose mode is active. Detected from data, not a guessed role
-  // field on `user` -- whichever list(s) actually come back non-empty
-  // determine what's offered. Someone who's both an attendee and an
-  // organizer gets a toggle between the two.
-  const [composeMode, setComposeMode] = useState(null); // 'attendee' | 'organizer'
 
+  const [composeMode, setComposeMode] = useState(null);       // attendee or organizer
+
+  // fetches all messages
   const fetchAllMessages = async () => {
     setMessagesLoading(true);
     setMessagesError(null);
@@ -59,6 +54,7 @@ export default function Messages(props) {
     }
   };
 
+  // fetches all bookings a user has made
   const fetchUserBookings = async () => {
     setBookingsLoading(true);
     setBookingsError(null);
@@ -70,7 +66,6 @@ export default function Messages(props) {
       const seenIds = new Set();
 
       for (const b of bookings) {
-        // Safely captures both snake_case and camelCase backend variations
         const evId = b.event_id || b.eventId || b.id;
         const evTitle = b.event_title || b.eventTitle || b.title || `Εκδήλωση (${evId})`;
 
@@ -89,6 +84,8 @@ export default function Messages(props) {
       setBookingsLoading(false);
     }
   };
+
+  // fetches all events an organizer has created
   const fetchOrganizerEvents = async () => {
     setOrganizerEventsLoading(true);
     setOrganizerEventsError(null);
@@ -109,17 +106,12 @@ export default function Messages(props) {
     }
   };
   
+  // fetches each attendee only once per event
   const fetchAttendees = async (eventId) => {
     setAttendeesLoading(true);
     setAttendeesError(null);
     try {
-      // schemas.py confirms this returns a plain List[BookingResponse],
-      // with attendee_id (int) and attendee_username (str) -- no more
-      // guessing needed here.
       const bookings = await getEventBookings(eventId);
-
-      // Dedupe by attendee_id: the same person shows up once per ticket
-      // type they bought for this event.
       const uniqueAttendees = [];
       const seenIds = new Set();
       for (const b of bookings) {
@@ -144,9 +136,7 @@ export default function Messages(props) {
   useEffect(() => {
     if (!user) return;
     fetchAllMessages();
-     // Arrived here from ViewEvent's "message this attendee" link -- jump
-    // straight into organizer compose mode with that event/attendee
-    // pre-selected instead of making them navigate the pickers again.
+     // arrived here from ViewEvent's "message this attendee" link 
     const prefill = location.state;
     if (prefill?.prefillEventId) {
       setComposeMode('organizer');
@@ -162,9 +152,6 @@ export default function Messages(props) {
         fetchUserBookings(),
         fetchOrganizerEvents(),
       ]);
-      // Default to whichever role has data; prefer attendee if both do,
-      // since that's the more common case, but either can be switched to.
-      // Skip this when we already set the mode from a prefill above.
       if (prefill?.prefillEventId) return;
       if (bookings.length > 0) {
         setComposeMode('attendee');
@@ -185,6 +172,8 @@ export default function Messages(props) {
   
   const unreadCount = inbox.filter(msg => !msg.is_read).length;
   const activeMessages = currentFolder === 0 ? inbox : sent;
+
+  // helpers
 
   const handleDelete = async (id, e) => {
     e.stopPropagation();
@@ -231,7 +220,6 @@ export default function Messages(props) {
       setSending(true);
       const eventDetails = await getEventDetail(selectedEventId);
 
-      // Safely captures the organizer ID regardless of casing
       const orgId = eventDetails.organizer_id || eventDetails.organizerId;
 
       if (!orgId) {
@@ -246,9 +234,7 @@ export default function Messages(props) {
         body: messageBody,
       };
       const created = await sendMessage(payload);
-      // Show the message in "Απεσταλμένα" immediately instead of waiting
-      // on a refetch (and in case the "sent" endpoint / list doesn't
-      // reliably include it right away).
+      // show the message in sent immediately instead of waiting
 
       addToSentLocally(created, {
         event_id: selectedEventId,
@@ -303,9 +289,6 @@ export default function Messages(props) {
       setSelectedRecipientId('');
       resetComposeFields();
       
-      
-      
-      
       setCurrentFolder(1);
     } catch (error) {
       alert(`Σφάλμα: ${error.message}`);
@@ -340,6 +323,7 @@ export default function Messages(props) {
           </Tabs>
           <Divider />
 
+              {/* incoming and sent tabs */}
           {(currentFolder === 0 || currentFolder === 1) && (
             <>
               {messagesLoading ? (
@@ -402,10 +386,10 @@ export default function Messages(props) {
               )}
             </>
           )}
-
+            {/* new message tab */}
           {currentFolder === 2 && (
             <Box sx={{p: 3, display: 'flex', flexDirection: 'column', gap: 2}}>
-
+              {/* user is both an oganizer and an attendee */}
               {canActAsAttendee && canActAsOrganizer && (
                 <ToggleButtonGroup
                   value={composeMode}
@@ -495,7 +479,7 @@ export default function Messages(props) {
                         label="Επιλογή Εκδήλωσης"
                         onChange={e => {
                           setSelectedOrganizerEventId(e.target.value);
-                          setSelectedRecipientId(''); // manual event change
+                          setSelectedRecipientId('');
                        }}
                       >
                         {organizerEvents.map(ev => (

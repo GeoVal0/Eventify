@@ -63,7 +63,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignIn(props) {
-  //store user input values, error statesm and messages 
+  //store user input values, error states and messages 
   const [username, setUsername] = React.useState('');
   const [usernameError, setUsernameError] = React.useState('');
   const [usernameErrorMessage, setUsernameErrorMessage] = React.useState('');
@@ -92,14 +92,9 @@ export default function SignIn(props) {
   React.useEffect(() => {
     if (user) {
       const userRole = JSON.parse(localStorage.getItem('user_data'))?.role;
-      
-      // Same logic for every role now: go back to wherever NavBar sent us
-      // from (location.state.from) if there is one, otherwise fall back to
-      // a sensible per-role default. Previously ADMIN skipped this check
-      // entirely and always hardcoded /admin/UserList, which only looked
-      // correct because that happened to be the one admin menu item that's
-      // an actual page.
-      const defaultPath = userRole === "ADMIN" ? '/admin/UserList' : '/Home';
+
+      // takes the user to exact path they chose from navbar
+      const defaultPath = userRole === "ADMIN" ? '/admin/UserList' : '/Home';   // if ADMIN -> UserList, else Home
       const returnPath = location.state?.from || defaultPath;
       const returnState = location.state?.event ? { event: location.state.event } : {};
       navigate(returnPath, { state: returnState, replace: true });
@@ -109,7 +104,7 @@ export default function SignIn(props) {
     }
   }, [user, navigate, location]);
 
-  //local validation
+  // error messages for all fields when empty
   const validateInputs = () => {
     let isValid = true;
 

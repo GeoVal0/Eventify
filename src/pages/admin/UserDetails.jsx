@@ -3,19 +3,19 @@ import {Box, Typography, Button, Avatar, Grid, CircularProgress } from '@mui/mat
 import PersonIcon from '@mui/icons-material/Person';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useLocation, useNavigate } from 'react-router-dom';
-import {getUserDetail, approveUser, rejectUser } from '../../api'; // Import your API functions
+import {getUserDetail, approveUser, rejectUser } from '../../api';
 
 export default function UserDetails(props) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract the userId passed from the UserList navigation state
+  // extract the userId passed from the UserList navigation state
   const userId = location.state?.userId; 
   
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch the real user data from the backend[cite: 5]
+  // fetch the real user data from the backend
   useEffect(() => {
     if (!userId) {
       navigate('/admin/UserList'); 
@@ -24,7 +24,7 @@ export default function UserDetails(props) {
 
     const fetchUser = async () => {
       try {
-        const data = await getUserDetail(userId); // Calls GET /api/admin/users/{user_id}[cite: 5]
+        const data = await getUserDetail(userId);        // calls GET /api/admin/users/{user_id}
         setUserData(data);
       } catch (error) {
         console.error("Failed to fetch user:", error);
@@ -37,6 +37,8 @@ export default function UserDetails(props) {
 
     fetchUser();
   }, [userId, navigate]);
+
+  // helpers
 
   const getRoleLabel = (role) => {
     switch (role) {
@@ -69,10 +71,10 @@ export default function UserDetails(props) {
     return `${dayName} ${fullDate} ${time}`;
   };
 
-  // --- Admin Action Handlers connected to FastAPI[cite: 5] ---
+  // admin action handlers connected to fastAPI
   const handleAccept = async (id) => {
     try {
-      await approveUser(id); // Calls PUT /api/admin/users/{user_id}/approve[cite: 5]
+      await approveUser(id);                // calls PUT /api/admin/users/{user_id}/approve
       alert("Η εγγραφή εγκρίθηκε!");
       navigate('/admin/UserList'); 
     } catch (err) {
@@ -83,7 +85,7 @@ export default function UserDetails(props) {
   const handleCancel = async (id) => {
     if(!window.confirm("Σίγουρα θέλετε να απορρίψετε αυτόν τον χρήστη;")) return;
     try {
-      await rejectUser(id); // Calls PUT /api/admin/users/{user_id}/reject[cite: 5]
+      await rejectUser(id);               // calls PUT /api/admin/users/{user_id}/reject
       alert("Η εγγραφή απορρίφθηκε!");
       navigate('/admin/UserList'); 
     } catch (err) {
@@ -137,7 +139,7 @@ export default function UserDetails(props) {
                 <Box>
                   <Typography variant="h4" fontWeight="bold" sx={{mb: 1}}>{userData.username}</Typography>
                   
-                  {/* Map directly to backend schema fields[cite: 6] */}
+                  {/* map directly to backend schema fields */}
                   <Typography variant="body1" sx={{color: 'text.secondary', fontSize: '1.25rem'}}>
                     Ονοματεπώνυμο: {userData.first_name} {userData.last_name}
                   </Typography>
@@ -166,7 +168,7 @@ export default function UserDetails(props) {
                 </Box>
               </Box>
 
-              {/* Show buttons only if the user is strictly NOT approved[cite: 6] */}
+               {/* show buttons only if the user is NOT approved */}
               {!userData.is_approved && (
                 <Box sx={{display: 'flex', flexDirection: 'column', gap: 2, minWidth: '200px'}}>
                   <Button 
@@ -191,6 +193,7 @@ export default function UserDetails(props) {
                       fontWeight: 'bold', 
                       color: 'white',
                       boxShadow: '0 3px 5px 2px rgba(129, 39, 39, .3)',
+                      border: '1px solid #c50c0c', boxShadow: '0 3px 5px 2px rgba(230, 0, 0, 0.3)',
                       whiteSpace: 'nowrap'
                    }}
                     onClick={() => handleCancel(userData.id)}

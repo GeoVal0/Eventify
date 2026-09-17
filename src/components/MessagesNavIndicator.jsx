@@ -5,11 +5,7 @@ import {useNavigate } from 'react-router-dom';
 import {useAuth } from '../context/AuthContext';
 import {getMessages } from '../api';
 
-// Small persistent "you have new messages" indicator. Doesn't pop anything
-// open -- clicking it just navigates to the /messages page. This exists as
-// a drop-in fallback because NavBar.jsx wasn't available to wire the badge
-// into directly; if NavBar.jsx gets shared, this can move there instead as
-// a plain icon + Badge next to the other nav items.
+// floating message ico that is always available when logged in
 export default function MessagesNavIndicator() {
   const { user } = useAuth();
   const navigate = useNavigate();

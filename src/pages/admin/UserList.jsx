@@ -4,7 +4,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useAuth } from '../../context/AuthContext';
 import {useNavigate } from 'react-router-dom';
-import {getUsers, approveUser, rejectUser } from '../../api'; // Added real API calls
+import {getUsers, approveUser, rejectUser } from '../../api';
 
 export default function ApplicationHistoryPage(props) {
   const { user } = useAuth();
@@ -12,22 +12,16 @@ export default function ApplicationHistoryPage(props) {
   
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // filters
   const [sortOrder, setSortOrder] = useState('newest'); 
   const [statusFilter, setStatusFilter] = useState('all');
-
-  // const [openDialog, setOpenDialog] = useState(false);
-  // const [selectedAppt, setSelectedAppt] = useState(null); 
-  // const [rating, setRating] = useState(0);
-  // const [comment, setComment] = useState('');
-  // const [userData, setUserData] = useState('');
   
-  // 1. Fetch real data from FastAPI
+  // fetch the real data from the backend
   const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await getUsers(); // Fetches from /api/admin/users[cite: 5]
+      const data = await getUsers();            // fetches from /api/admin/users[cite: 5]
       setApplications(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -39,6 +33,8 @@ export default function ApplicationHistoryPage(props) {
   useEffect(() => {
     fetchData();
   }, []); 
+
+  // helpers
 
   const getRoleLabel = (role) => {
     switch (role) {
@@ -55,7 +51,6 @@ export default function ApplicationHistoryPage(props) {
     return 'warning.main';
   }
 
-  // 2. Map boolean is_approved to your custom string labels[cite: 5, 6]
   const getStatusLabel = (is_approved) => {
     if (is_approved) return 'ΕΠΙΒΕΒΑΙΩΜΕΝΟ';
     return 'ΕΚΚΡΕΜΕΙ ΕΠΙΒΕΒΑΙΩΣΗ';
@@ -67,12 +62,12 @@ export default function ApplicationHistoryPage(props) {
     return 'text.primary';
   };
 
-  // 3. Connect buttons to API[cite: 5]
+  // connect action buttons to API
   const handleAccept = async (userId) => {
     try {
       await approveUser(userId);
       alert("Η εγγραφή εγκρίθηκε!");
-      fetchData(); // Refresh list automatically
+      fetchData();                          // refresh list automatically
     } catch (err) {
       alert("Υπήρξε πρόβλημα κατά την έγκριση.");
     }
@@ -83,19 +78,19 @@ export default function ApplicationHistoryPage(props) {
     try {
       await rejectUser(userId);
       alert("Η εγγραφή απορρίφθηκε!");
-      fetchData(); // Refresh list automatically
+      fetchData();                        // refresh list automatically
     } catch (err) {
       alert("Υπήρξε πρόβλημα κατά την απόρριψη.");
     }
   };
 
-  // 5. Filter and Sort using real backend fields[cite: 5, 6]
+  // filter and sort
   const filteredApplications = applications
     .filter(app => {
       if (statusFilter === 'all') return true;
       if (statusFilter === 'accepted') return app.is_approved === true;
       if (statusFilter === 'pending') return app.is_approved === false;
-      return false; // Backend permanently deletes rejected users, so 'rejected' yields nothing[cite: 5]
+      return false; // Backend permanently deletes rejected users, so 'rejected' yields nothing
     })
     .sort((a, b) => {
       const dateA = new Date(a.created_at);
@@ -171,7 +166,7 @@ export default function ApplicationHistoryPage(props) {
                           '&:hover': {
                             transform: 'scale(1.02)', 
                             opacity: 0.8,
-                            boxShadow: 4 // Μεγαλώνει ελαφρώς η σκιά για να φαίνεται ότι πατιέται
+                            boxShadow: 4
                           }
                        }}
                       >
@@ -179,7 +174,7 @@ export default function ApplicationHistoryPage(props) {
                         <PersonIcon sx={{fontSize: 90, color: 'white'}} />
                       </Avatar>
 
-                      {/* 6. Map to the flat backend User structure[cite: 6] */}
+      
                       <Box sx={{flex: 1}}>
                         <Typography variant="h6" fontWeight="bold" sx={{color: 'black'}}>
                           {app.username}
@@ -206,7 +201,7 @@ export default function ApplicationHistoryPage(props) {
                         </Box>
                       </Box>
 
-                      {/* Action Buttons (Only show when pending) */}
+                      {/* show buttons only if the user is NOT approved */}
                       {app.is_approved === false && (
                         <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
                           <Button 
@@ -219,7 +214,7 @@ export default function ApplicationHistoryPage(props) {
                               border: '1px solid #2e7d32',
                               boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
                            }}
-                            onClick={() => handleAccept(app.id)} // Fixed: was userData.id
+                            onClick={() => handleAccept(app.id)}
                             >
                             Έγκριση Αίτησης
                           </Button>
@@ -231,9 +226,10 @@ export default function ApplicationHistoryPage(props) {
                               fontWeight: 'bold', 
                               color: 'white',
                               boxShadow: '0 3px 5px 2px rgba(129, 39, 39, .3)',
+                              border: '1px solid #c50c0c', boxShadow: '0 3px 5px 2px rgba(230, 0, 0, 0.3)',
                               whiteSpace: 'nowrap'
                            }}
-                            onClick={() => handleCancel(app.id)} // Fixed: was userData.id
+                            onClick={() => handleCancel(app.id)}
                           >
                           Απόρριψη Αίτησης
                           </Button>

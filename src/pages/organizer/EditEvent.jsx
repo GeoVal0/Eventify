@@ -21,7 +21,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import {getEventDetail, updateEvent, deleteEventPhoto, API_BASE_URL } from "../../api";
 
-
+// setup map icon
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -32,10 +32,13 @@ const customIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
+
+// updates the coordinates when the map is clicked
+
 function LocationMarker({ position, setPosition }) {
   useMapEvents({
     click(e) {
-      setPosition(e.latlng); // Updates the coordinates when the map is clicked
+      setPosition(e.latlng); 
     },
   });
   return position === null ? null : (
@@ -77,7 +80,7 @@ export default function EditEvent() {
   const [apiError, setApiError] = React.useState(''); 
   const [loading, setLoading] = React.useState(true);
 
-  // Event Form States
+  // event form states and error messages
   const [title, setTitle] = React.useState("");
   const [titleError, setTitleError] = React.useState(false);
   const [titleErrorMessage, setTitleErrorMessage] = React.useState('');
@@ -87,9 +90,6 @@ export default function EditEvent() {
   const [eventType, setEventType] = React.useState("");
   const [eventTypeError, setEventTypeError] = React.useState(false);
   const [eventTypeErrorMessage, setEventTypeErrorMessage] = React.useState('');
-  const [map, setMap] = React.useState(null);
-  const [mapError, setMapError] = React.useState(false);
-  const [mapErrorMessage, setMapErrorMessage] = React.useState('');
   const [date, setDate] = React.useState("");
   const [dateError, setDateError] = React.useState(false);
   const [dateErrorMessage, setDateErrorMessage] = React.useState('');
@@ -136,6 +136,8 @@ export default function EditEvent() {
       navigate('/organizer/EventHistory');
       return;
     }
+
+    // fetches all data for each event
 
     const fetchEventData = async () => {
       try {
@@ -188,6 +190,8 @@ export default function EditEvent() {
     fetchEventData();
 }, [eventId, navigate]);
 
+// helpers
+
   const handleAddTicket = () => {
     setTickets([...tickets, { id: null, type: '', price: '', quantity: '' }]);
   };
@@ -213,11 +217,12 @@ export default function EditEvent() {
   const handleRemovePhoto = (index) => {
     setPhotos(photos.filter((_, i) => i !== index));
   };
-  // Existing (already-saved) photos delete immediately on click, rather
-  // than waiting for the main "Αποθήκευση Αλλαγών" save -- the new-photo
+  // the new-photo
   // upload above already works the same way (happens right in handleSave
   // as its own request), so this keeps both photo actions consistent
   // instead of half-batching one and not the other.
+
+  // existing photos get deleted immediately on click
   const handleDeleteExistingPhoto = async (photoId) => {
     if (!window.confirm("Διαγραφή αυτής της φωτογραφίας;")) return;
     setDeletingPhotoId(photoId);
@@ -231,6 +236,8 @@ export default function EditEvent() {
       setDeletingPhotoId(null);
     }
   };
+
+  //ERROR MESSAGES FOR ALL FIELDS WHEN EMPTY
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -356,7 +363,7 @@ export default function EditEvent() {
       setApiError(''); 
       await updateEvent(eventId, payload);
 
-      // Upload new photos if selected[cite: 10]
+      // upload new photos 
       if (photos.length > 0 && eventId) {
         const token = localStorage.getItem('token') || localStorage.getItem('access_token');
         for (const photo of photos) {
@@ -447,8 +454,9 @@ export default function EditEvent() {
                   <MenuItem value="theater">Θέατρο</MenuItem>
                   <MenuItem value="cinema">Σινεμά</MenuItem>
                   <MenuItem value="sports">Αθλητισμός</MenuItem>
-                  <MenuItem value="arts">Τέχνες & Εκθέσεις</MenuItem>
-                  <MenuItem value="seminar">Σεμινάριο / Εκπαίδευση</MenuItem>
+                  <MenuItem value="arts">Τέχνες</MenuItem>
+                  <MenuItem value="festival">Φεστιβάλ</MenuItem>
+                  <MenuItem value="seminar">Σεμινάρια</MenuItem>
                 </Select>
                 {categoryError && <FormHelperText>{categoryErrorMessage}</FormHelperText>}
               </FormControl>
@@ -469,10 +477,9 @@ export default function EditEvent() {
                   <MenuItem value="performance">Θεατρική Παράσταση</MenuItem>
                   <MenuItem value="screening">Προβολή Ταινίας</MenuItem>
                   <MenuItem value="match">Αθλητικός Αγώνας</MenuItem>
+                  <MenuItem value="museum">Μουσείο / Έκθεση</MenuItem>
                   <MenuItem value="festival">Φεστιβάλ</MenuItem>
-                  <MenuItem value="seminar">Σεμινάριο / Διάλεξη</MenuItem>
-                  <MenuItem value="workshop">Εργαστήριο (Workshop)</MenuItem>
-                  <MenuItem value="conference">Συνέδριο / Ημερίδα</MenuItem>
+                  <MenuItem value="seminar">Σεμινάριο / Ημερίδα</MenuItem>
                 </Select>
                 {eventTypeError && <FormHelperText>{eventTypeErrorMessage}</FormHelperText>}
               </FormControl>
@@ -605,7 +612,9 @@ export default function EditEvent() {
                 helperText={descriptionErrorMessage}
               />
             </FormControl>
-            {/* ΥΠΑΡΧΟΥΣΕΣ ΦΩΤΟΓΡΑΦΙΕΣ */}
+
+            {/* photos are optional */}
+            
             {existingPhotos.length > 0 && (
               <FormControl fullWidth>
                 <FormLabel sx={{mb: 1}}>Υπάρχουσες Φωτογραφίες</FormLabel>
@@ -625,7 +634,6 @@ export default function EditEvent() {
                         sx={{width: '100%', height: '100%', objectFit: 'cover', display: 'block'}}
                       />
                       <Button
-                        // color="error"
                         size="small"
                         variant="contained"
                         onClick={() => handleDeleteExistingPhoto(photo.id)}
@@ -643,7 +651,6 @@ export default function EditEvent() {
               </FormControl>
             )}
 
-            {/* ΠΡΟΣΘΗΚΗ ΝΕΩΝ ΦΩΤΟΓΡΑΦΙΩΝ */}
             <FormControl fullWidth>
                 <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
                 <FormLabel>Προσθήκη Νέων Φωτογραφιών</FormLabel>
@@ -691,7 +698,6 @@ export default function EditEvent() {
               />
             </FormControl>
 
-            {/* --- DYNAMIC TICKETS SECTION --- */}
             <FormControl fullWidth error={ticketsError}>
               <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2}}>
                 <Typography variant="h6" fontWeight="bold">Κατηγορίες Εισιτηρίων</Typography>

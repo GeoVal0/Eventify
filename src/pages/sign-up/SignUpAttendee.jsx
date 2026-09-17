@@ -17,10 +17,8 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
-// import OutlinedInput from '@mui/material/OutlinedInput';
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -71,6 +69,7 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignUpAttendee(props) {
+  // sing up form states and error messages
   const { login, logout } = useAuth();
   const [openDialog, setOpenDialog] = React.useState(false);
   const navigate = useNavigate();
@@ -109,7 +108,7 @@ export default function SignUpAttendee(props) {
     navigate('/home');
   };
 
-  // Log out any existing user when visiting signup page
+  // log out any existing user when visiting signup page
   React.useEffect(() => {
     logout();
   }, []);
@@ -239,28 +238,26 @@ const handleSubmit = async (event) => {
 
     const data = new FormData(event.currentTarget);
 
-    // Map your frontend form data to exactly match the backend Pydantic schema (UserCreate)
+    // map frontend form data to exactly match the backend
     const newUser = {
       username: data.get('username'),
       password: data.get('password'),
       confirm_password: data.get('pass'),
-      first_name: data.get('name'),         // Mapped from 'name'
-      last_name: data.get('lastName'),      // Mapped from 'lastName'
+      first_name: data.get('name'),
+      last_name: data.get('lastName'),
       email: data.get('email'),
-      phone: data.get('phoneNumber'),       // Mapped from 'phoneNumber'
-      // Combine address and zip into a single address string since backend schema has one address field
-      address: `${data.get('address')}, ${data.get('zip')}`, 
+      phone: data.get('phoneNumber'),
+      address: `${data.get('address')}, ${data.get('zip')}`, //combine address and zip beacuse backend has one address field
       city: "",
       country: "",
       afm: data.get('afm'),
-      // Geolocation is optional in backend, so we leave it null for now
       latitude: null,
       longitude: null ,
       role: "ATTENDEE"
     };
 
     try {
-      // Send POST request to FastAPI. Notice the ?role=ORGANIZER query parameter!
+      // send POST request to fastAPI
       const response = await fetch('http://localhost:8000/api/auth/register', {
         method: 'POST',
         headers: {
@@ -269,20 +266,14 @@ const handleSubmit = async (event) => {
         body: JSON.stringify(newUser),
       });
 
-      if (response.ok) {
-        // Registration successful! 
-        // DO NOT log the user in. The assignment strictly requires them to pend admin approval.
-        setOpenDialog(true);        
-        // Redirect them back to the login page (or a dedicated 'Pending' page if you built one)
-      } else {
-        // Handle validation errors from FastAPI (e.g., username already exists)
+      if (response.ok) {  // registarion ok, opens the pop up window for approval
+        setOpenDialog(true);
+      } else {            // handle validation errors from fastAPI
         const errorData = await response.json();
-        // 4. FastAPI 422 errors put details in an array. This prints exactly what field is failing.
-        const errorMessage = typeof errorData.detail === 'string' 
+        const errorMessage = typeof errorData.detail === 'string'   // prints exactly what field is failing
             ? errorData.detail 
             : JSON.stringify(errorData.detail);
         alert(`Αποτυχία εγγραφής: ${errorMessage}`);
-        // alert(errorData.detail || "Υπήρξε πρόβλημα κατά την εγγραφή.");
       }
     } catch (error) {
       console.error("Connection Error:", error);
@@ -538,7 +529,7 @@ const handleSubmit = async (event) => {
             </Typography>
         </Card>
       </SignUpContainer>
-      {/* Pop-up Παράθυρο Αναμονής Έγκρισης */}
+      {/* pop up window for registration approval from admin*/}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}

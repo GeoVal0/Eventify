@@ -165,6 +165,8 @@ export default function EditAttendee(props) {
     loadProfileData();
   }, [user]);
 
+  // ERROR MESSAGES FOR ALL FIELDS WHEN EMPTY
+
   const validateInputs = () => {
     let isValid = true;
 

@@ -36,6 +36,8 @@ export default function RecommendedEvents() {
         // A 403 here just means this user isn't an attendee (organizer/
         // admin) -- the backend enforces that, so quietly hide the section
         // instead of showing an error for something that isn't one.
+
+        // organizers / admin get 403 
         if (!cancelled) {
           console.error("Error fetching recommendations:", error);
           setVisible(false);

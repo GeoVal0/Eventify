@@ -24,7 +24,6 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-
 import {useAuth } from "../../context/AuthContext";
 import {useNavigate } from "react-router-dom";
 
@@ -106,7 +105,7 @@ export default function SignUpOrganizer(props) {
     navigate('/home');
   };
 
-  // Log out any existing user when visiting signup page
+  // log out any existing user when visiting signup page
   React.useEffect(() => {
     logout();
   }, []);
@@ -236,6 +235,7 @@ export default function SignUpOrganizer(props) {
 
     const data = new FormData(event.currentTarget);
 
+    // map frontend form data to exactly match the backend
     const newOrganizer = {
       username: data.get('username'),
       password: data.get('password'),
@@ -244,10 +244,9 @@ export default function SignUpOrganizer(props) {
       last_name: data.get('lastName'),
       email: data.get('email'),
       phone: data.get('phoneNumber'),
-      address: `${data.get('address')}, ${data.get('zip')}`, 
+      address: `${data.get('address')}, ${data.get('zip')}`, //combine address and zip beacuse backend has one address field
       city: "",
       country: "",
-      // zip: data.get('zip'),
       afm: data.get('afm'),
       gender: gender,
       latitude: null,
@@ -256,6 +255,7 @@ export default function SignUpOrganizer(props) {
     };
 
     try {
+      // send POST request to fastAPI
       const response = await fetch('http://localhost:8000/api/auth/register', {
         method: 'POST',
         headers: {
@@ -264,19 +264,14 @@ export default function SignUpOrganizer(props) {
         body: JSON.stringify(newOrganizer),
       });
 
-      if (response.ok) {
-        // Registration successful! 
-        // DO NOT log the user in. The assignment strictly requires them to pend admin approval.
-        setOpenDialog(true);        
-        // Redirect them back to the login page (or a dedicated 'Pending' page if you built one)
-      } else {
+      if (response.ok) {          // registarion ok, opens the pop up window for approval
+        setOpenDialog(true);
+      } else {                    // handle validation errors from fastAPI
         const errorData = await response.json();
-        // 4. FastAPI 422 errors put details in an array. This prints exactly what field is failing.
-        const errorMessage = typeof errorData.detail === 'string' 
+        const errorMessage = typeof errorData.detail === 'string'     // prints exactly what field is failing
             ? errorData.detail 
             : JSON.stringify(errorData.detail);
-        alert(`Αποτυχία εγγραφής: ${errorMessage}`);
-        // alert(errorData.detail || "Υπήρξε πρόβλημα κατά την εγγραφή.");
+        alert(`Αποτυχία εγγραφής: ${errorMessage}`);    // prints exactly what field is failing
       }
     } catch (error) {
       console.error("Connection Error:", error);
@@ -533,7 +528,7 @@ export default function SignUpOrganizer(props) {
         </Card>
       </SignUpContainer>
       
-      {/* Pop-up Παράθυρο Αναμονής Έγκρισης */}
+      {/* pop up window for registration approval from admin */}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}

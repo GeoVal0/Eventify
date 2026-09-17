@@ -165,6 +165,8 @@ export default function EditOrganizer(props) {
     loadProfileData();
   }, [user]);
 
+  // error messages
+
   const validateInputs = () => {
     let isValid = true;
 

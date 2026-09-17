@@ -20,7 +20,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import {createEvent } from '../../api';
 
-
+// setup map icon
 const customIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -30,6 +30,8 @@ const customIcon = new L.Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
+
+// updates the coordinates when the map is clicked
 
 function LocationMarker({ position, setPosition }) {
   useMapEvents({
@@ -72,9 +74,6 @@ const EditContainer = styled(Stack)(({ theme }) => ({
 export default function CreateEvent() {
   const navigate = useNavigate();
   const [apiError, setApiError] = React.useState('');
-  
-  // Φωτογραφίες (Προαιρετικό)
-  const [photos, setPhotos] = React.useState([]);
 
   const [title, setTitle] = React.useState("");
   const [titleError, setTitleError] = React.useState(false);
@@ -85,9 +84,6 @@ export default function CreateEvent() {
   const [eventType, setEventType] = React.useState("");
   const [eventTypeError, setEventTypeError] = React.useState(false);
   const [eventTypeErrorMessage, setEventTypeErrorMessage] = React.useState('');
-  const [map, setMap] = React.useState(null);
-  const [mapError, setMapError] = React.useState(false);
-  const [mapErrorMessage, setMapErrorMessage] = React.useState('');
   const [date, setDate] = React.useState("");
   const [dateError, setDateError] = React.useState(false);
   const [dateErrorMessage, setDateErrorMessage] = React.useState('');
@@ -116,9 +112,14 @@ export default function CreateEvent() {
   const [capacityError, setCapacityError] = React.useState(false);
   const [capacityErrorMessage, setCapacityErrorMessage] = React.useState('');
   const [position, setPosition] = React.useState({ lat: 37.97601, lng: 23.72750 }); 
+
+  const [photos, setPhotos] = React.useState([]);
+
   const [tickets, setTickets] = React.useState([{ type: '', price: '', quantity: '' } ]);
   const [ticketsError, setTicketsError] = React.useState(false);
   const [ticketsErrorMessage, setTicketsErrorMessage] = React.useState('');
+
+  // helpers
 
   const handleAddTicket = () => {
     setTickets([...tickets, { type: '', price: '', quantity: '' }]);
@@ -146,9 +147,11 @@ export default function CreateEvent() {
     setPhotos(photos.filter((_, i) => i !== index));
   };
 
+  // ERROR MESSAGES FOR ALL FIELDS WHEN EMPTY
+
   const handleSave = async (e, status = 'PUBLISHED') => {
     e.preventDefault();
-    
+
     let isValid = true;
 
     if (!title || title.length < 1){
@@ -306,11 +309,11 @@ export default function CreateEvent() {
     try {
       setApiError('');
 
-      // 1. Δημιουργία της εκδήλωσης
+      // event creation
       const createdEvent = await createEvent(payload);
       const eventId = createdEvent.event_id || createdEvent.id;
 
-      // 2. Ανέβασμα φωτογραφιών (αν έχουν επιλεχθεί)
+      // upload photos
       if (photos.length > 0 && eventId) {
         const token = localStorage.getItem('token') || localStorage.getItem('access_token');
         
@@ -552,7 +555,7 @@ export default function CreateEvent() {
               />
             </FormControl>
 
-            {/* ΠΡΟΣΘΗΚΗ ΦΩΤΟΓΡΑΦΙΩΝ (ΠΡΟΑΙΡΕΤΙΚΟ) */}
+            {/* photos are optional */}
             <FormControl fullWidth>
               <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
                 <FormLabel>Φωτογραφίες (Προαιρετικό)</FormLabel>

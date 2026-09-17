@@ -21,13 +21,14 @@ const getFallbackImage = (event) => {
 };
 
 export default function EventHistoryPage(props) {
-  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortOrder, setSortOrder] = useState('newest'); 
   const [statusFilter, setStatusFilter] = useState('all');
+
+  // fetches all data for each event
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -45,11 +46,13 @@ export default function EventHistoryPage(props) {
     fetchEventData();
   }, []);
 
+  // helpers
+
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'PUBLISHED': return 'Δημοσιευμένη';
-      case 'DRAFT': return 'Προσωρινά Αποθηκευμένη';
-      case 'CANCELLED': return 'Ακυρωμένη';
+      case 'PUBLISHED': return 'ΔΗΜΟΣΙΕΥΜΕΝΗ';
+      case 'DRAFT': return 'ΠΡΟΣΩΡΙΝΑ ΑΠΟΘΗΚΕΥΜΕΝΗ';
+      case 'CANCELLED': return 'ΑΚΥΡΩΜΕΝΗ';
       default: return status ? status.toUpperCase() : 'Αγνωστη';
     }
   };
@@ -81,7 +84,7 @@ export default function EventHistoryPage(props) {
     }
   };
 
-  // --- FILTERING & SORTING ---
+  // filtering and sorting
   const filteredEvents = events
     .filter(e => {
       if (statusFilter === 'all') return true;
@@ -109,7 +112,7 @@ export default function EventHistoryPage(props) {
             overflowY: 'auto' 
        }}>
 
-          {/* Top Filters */}
+          {/* filters */}
           <Box sx={{width: '100%', maxWidth: '900px', mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2}}>
             <Box sx={{display: 'flex', gap: 2}}>
               <FormControl size="small" sx={{minWidth: 200, bgcolor: 'white', borderRadius: 1}}>
@@ -132,7 +135,7 @@ export default function EventHistoryPage(props) {
             </Box>
           </Box>
 
-          {/* Event Cards List */}
+          {/* event list */}
           <Box sx={{width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column', gap: 2}}>
             {filteredEvents.length > 0 ? (
               filteredEvents.map((event) => {
@@ -155,7 +158,7 @@ export default function EventHistoryPage(props) {
                      }}
                       >
                     
-                    {/* Left Side: Photo Block */}
+                    {/* photo */}
                     <Box sx={{
                       width: { xs: '100%', sm: '200px' }, 
                       height: '200px',
@@ -179,34 +182,30 @@ export default function EventHistoryPage(props) {
                         alt={event.title}
                         sx={{
                           width: '100%', 
-                          // width: { xs: '100%', sm: 200 },
-                          height: '100%', 
-                          // height: 200,
+                          height: '100%',
                           objectFit: 'cover'
                        }}
                       />
                     </Box>
 
-                    {/* Middle: Event Info */}
+                    {/* event info */}
                     <Box sx={{flex: 1, p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                       <Typography variant="h6" fontWeight="bold" sx={{mb: 1}}>
                         {event.title}
                       </Typography>
 
                       <Typography variant="body2" color="text.secondary" sx={{display: 'flex', alignItems: 'center', gap: 0.5}}>
-                         Χώρος: {event.venue}, {event.address}, {event.city}
+                        Χώρος: {event.venue}, {event.address}, {event.city}
                       </Typography>
                       
                       <Typography variant="body2" color="text.secondary">
-                         {/* Ημερομηνία: {event.start_datetime ? event.start_datetime.split('T')[0] : 'Άγνωστη'} */}
-                          Ημερομηνία: {date}
+                        Ημερομηνία: {date}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                         {/* Ώρα: {event.start_datetime && event.start_datetime.includes('T') ? event.start_datetime.split('T')[1].substring(0,5) : 'Άγνωστη'} */}
-                          Ώρα: {time}
+                        Ώρα: {time}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                         Αριθμός Κρατήσεων: {event.total_booked}
+                        Αριθμός Κρατήσεων: {event.total_booked}
                       </Typography>
 
                       <Typography 
@@ -222,7 +221,7 @@ export default function EventHistoryPage(props) {
                     </Box>
                   </Box>
 
-                    {/* Right Side: Action Buttons */}
+                    {/* action buttons */}
                     <Box sx={{p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, minWidth: '200px', alignItems: 'center'}}>
 
                       {(event.status === 'PUBLISHED') && (

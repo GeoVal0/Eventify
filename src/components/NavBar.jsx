@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import {useNavigate, useLocation } from "react-router-dom";
 import {useAuth } from "../context/AuthContext";
-import {AppBar, Toolbar, Box, Button, Menu, MenuItem, Divider, IconButton, Badge } from "@mui/material";
+import {AppBar, Toolbar, Box, Button, Menu, MenuItem, Divider } from "@mui/material";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PersonIcon from '@mui/icons-material/Person';
-import EmailIcon from '@mui/icons-material/Email';
 import {getMessages, exportEventsXml, exportEventsJson } from '../api';
 
 export default function Navbar() {
@@ -12,13 +11,12 @@ export default function Navbar() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  // Dropdown States for Material UI
+  // dropdown states
   const [registerAnchorEl, setRegisterAnchorEl] = useState(null);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
   const [organizerAnchorEl, setOrganizerAnchorEl] = useState(null);
   const [adminAnchorEl, setAdminAnchorEl] = useState(null);
 
-  // Updated to match your actual routing structure
   const getActiveButtonFromPath = () => {
     if (location.pathname.startsWith("/organizer")) return "organizers";
     if (location.pathname.startsWith("/admin")) return "admin";
@@ -26,34 +24,6 @@ export default function Navbar() {
   };
 
   const [activeButton, setActiveButton] = useState(getActiveButtonFromPath());
-
-  // Unread-messages badge -- moved here from the standalone floating
-  // MessagesNavIndicator now that NavBar.jsx is available to wire it into
-  // directly, as a plain icon + badge alongside the other nav items.
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (!user) {
-      setUnreadCount(0);
-      return;
-    }
-    let cancelled = false;
-    const fetchUnread = async () => {
-      try {
-        const data = await getMessages();
-        const inbox = data?.items || data || [];
-        if (!cancelled) setUnreadCount(inbox.filter((m) => !m.is_read).length);
-      } catch (error) {
-        console.error("Failed to fetch unread message count:", error);
-      }
-    };
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 30000); // poll for new messages while navigating
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [user]);
 
   useEffect(() => {
     setActiveButton(getActiveButtonFromPath());
@@ -71,7 +41,7 @@ export default function Navbar() {
   const handleAdminClick = (event) => setAdminAnchorEl(event.currentTarget);
   const handleAdminClose = () => setAdminAnchorEl(null);
 
-  // Helper for MUI Button styling
+
   const getButtonStyle = (buttonName) => ({
     fontWeight: 'bold',
     borderRadius: 2,
@@ -83,26 +53,20 @@ export default function Navbar() {
     }
   });
 
-  // Role-Check Interceptor for Organizer Routes
   const handleOrganizerNavigation = (path) => {
     handleOrganizerClose();
     
     if (!user) {
-      // Not logged in -> Go to login, remembering where we were headed so
-      // Login.jsx can send them back here afterward instead of some
-      // hardcoded default.
+      // not logged in -> go to login, remembering where we were headed
       navigate("/login", { state: { from: path } });
     } else if (user.role !== "ORGANIZER") {
-      // Logged in as admin -> Force logout so they can switch accounts, then go to login
       logout();
       navigate("/login", { state: { from: path } });
     } else {
-      // Logged in as Organizer -> Proceed normally
       navigate(path);
     }
   };
 
-  // Role-Check Interceptor for Admin Routes
   const handleAdminNavigation = (path) => {
     handleAdminClose();
     
@@ -116,8 +80,7 @@ export default function Navbar() {
     }
   };
   
-  // Same role gate as handleAdminNavigation, but triggers a file download
-  // instead of a route change.
+  // only ADMIN can download the files
   const handleExportEvents = async (format) => {
     handleAdminClose();
 
@@ -146,7 +109,7 @@ export default function Navbar() {
     <AppBar position="sticky" sx={{bgcolor: 'white', color: 'black', boxShadow: '0 2px 4px rgba(0,0,0,0.05)'}}>
       <Toolbar sx={{display: 'flex', justifyContent: 'space-between', px: { xs: 2, md: 4 }}}>
         
-        {/* Left Side: Logo and Links */}
+        {/* logo */}
         <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
           <Box 
             component="img"
@@ -160,10 +123,10 @@ export default function Navbar() {
           />
         </Box>
 
-        {/* Right Side: Auth Actions */}
+        {/* dashboards */}
         <Box sx={{display: 'flex', gap: 2, alignItems: 'center'}}>
           
-          {/* Organizer Dropdown */}
+          {/* organizer dropdown */}
           <Button 
             endIcon={<KeyboardArrowDownIcon />} 
             onClick={handleOrganizerClick}
@@ -185,7 +148,7 @@ export default function Navbar() {
             </MenuItem>
           </Menu>
 
-          {/* admin Dropdown */}
+          {/* admin dropdown */}
           <Button 
             endIcon={<KeyboardArrowDownIcon />} 
             onClick={handleAdminClick}
@@ -221,7 +184,7 @@ export default function Navbar() {
 
           {!user ? (
             <>
-              {/* Register Dropdown */}
+              {/* register dropdown */}
               <Button 
                 endIcon={<KeyboardArrowDownIcon />} 
                 onClick={handleRegisterClick}
@@ -243,7 +206,7 @@ export default function Navbar() {
                 </MenuItem>
               </Menu>
 
-              {/* Login Button */}
+              {/* login button */}
               <Button 
                 variant="contained" 
                 color="primary" 
@@ -255,18 +218,8 @@ export default function Navbar() {
             </>
           ) : (
             <>
-            
-              {/* Messages badge
-              <IconButton
-                onClick={() => navigate('/messages')}
-                sx={{color: location.pathname === '/messages' ? 'primary.main' : 'text.primary'}}
-              >
-                <Badge badgeContent={unreadCount} color="error">
-                  <EmailIcon />
-                </Badge>
-              </IconButton> */}
 
-              {/* User Menu Dropdown */}
+              {/* loged in user dropdown */}
               <Button
                 variant="outlined"
                 startIcon={<PersonIcon />}
