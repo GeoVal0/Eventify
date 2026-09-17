@@ -113,7 +113,7 @@ export default function Navbar() {
         <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
           <Box 
             component="img"
-            src="/logo.svg"
+            src="/public/Eventify.png"
             alt="Logo"
             onClick={() => {
               navigate("/Home");
