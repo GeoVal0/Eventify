@@ -31,6 +31,8 @@ class BookingStatus(enum.Enum):
 # Association table: Event <-> Category (many-to-many)
 # The DTD allows an event to belong to more than one <Category>
 # ==========================================
+# A plain foreign key column can only point to one row; many-to-many needs its
+# own table with one row per (event, category) pairing instead.
 event_categories = Table(
     "event_categories",
     Base.metadata,
