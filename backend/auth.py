@@ -10,24 +10,19 @@ from sqlalchemy.orm import Session
 import models
 from database import get_db
 
-# In a real application, NEVER hardcode the secret key! Store it in a .env file.
-# Reading from an env var here so it's at least overridable without editing code.
+# Hardcoded secret key because i do not care
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "ted2026_super_secret_key_change_me")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 # FastAPI tool to extract the token from the "Authorization: Bearer <token>" header
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-# Same, but doesn't error out when there's no token - for endpoints that are
-# public but behave differently when the caller happens to be logged in
-# (e.g. event detail pages: owners can see their own DRAFT events, and a
-# logged-in view gets logged for the recommender).
+
+# Same, but doesn't error out when there's no token 
 optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
-# ==========================================
-# Password Utilities (Updated for direct bcrypt)
-# ==========================================
 
+# Password Utilities (Updated for direct bcrypt)
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Checks if the provided password matches the hash in the database."""
     # bcrypt requires bytes, so we encode the strings
@@ -42,13 +37,11 @@ def get_password_hash(password: str) -> str:
     salt = bcrypt.gensalt()
     hashed_bytes = bcrypt.hashpw(password_bytes, salt)
     
-    # Return it as a normal string to store in the database
+    # Return as normal string 
     return hashed_bytes.decode('utf-8')
 
-# ==========================================
-# JWT Utilities
-# ==========================================
 
+# JWT Utilities
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Generates a JSON Web Token containing the user's ID and Role."""
     to_encode = data.copy()
@@ -63,10 +56,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     
     return encoded_jwt
 
-# ==========================================
-# Role-Based Access Control (RBAC) Dependencies
-# ==========================================
 
+# RBAC Dependencies
 def get_current_user_token(token: str = Depends(oauth2_scheme)) -> dict:
     """
     Decodes the JWT token sent by the React frontend.
@@ -89,6 +80,8 @@ def get_current_user_token(token: str = Depends(oauth2_scheme)) -> dict:
 
         return {"user_id": user_id, "role": role}
 
+    # Checked separately from the generic case below so an expired token gets its
+    # own clear message instead of a generic "invalid credentials".
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.PyJWTError:
@@ -144,6 +137,7 @@ def get_optional_current_user(
     if not token:
         return None
     try:
+        # "sub" is stored as a string per the JWT spec, so it's cast back to int here.
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
         if user_id is None:
@@ -154,9 +148,8 @@ def get_optional_current_user(
 
 
 # --- Role Checks ---
-# require_role(...) is the single source of truth; the three names below
+# require_role(...) is the single source of truth, and the three names below
 # are kept so existing imports (e.g. in main.py) don't break.
-
 def require_role(*allowed_roles: str):
     """Factory for a dependency that only lets the given roles through.
     Usage: current_user: models.User = Depends(require_role("ADMIN", "ORGANIZER"))
