@@ -25,6 +25,8 @@ def generate_event_id(db: Session) -> str:
     """Produces IDs in the EVxxxx shape used throughout the assignment (EV1024, ...)."""
     existing_ids = [row[0] for row in db.query(models.Event.event_id).all()]
     max_num = 1000
+    # Scans every existing id for its numeric part and keeps the highest one seen,
+    # so the next id generated is always one higher than anything already in use.
     for eid in existing_ids:
         digits = "".join(ch for ch in eid if ch.isdigit())
         if digits:
@@ -60,12 +62,13 @@ def generate_booking_id(db: Session) -> str:
 
 def get_or_create_categories(db: Session, names: List[str]) -> List[models.Category]:
     categories = []
-    seen = set()
+    seen = set() # tracks lowercased names already handled in THIS call, to dedupe input
     for raw in names:
         name = raw.strip()
         if not name or name.lower() in seen:
             continue
         seen.add(name.lower())
+        # ilike = case-insensitive match, so "Music" and "music" reuse the same row.
         category = db.query(models.Category).filter(models.Category.name.ilike(name)).first()
         if not category:
             category = models.Category(name=name)
@@ -85,6 +88,8 @@ def get_owned_event(db: Session, event_id: str, current_user: models.User) -> mo
     event = db.query(models.Event).filter(models.Event.event_id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found.")
+    # Admins are allowed through as a management override; every other role must
+    # actually be the organizer who created this specific event.
     if event.organizer_id != current_user.id and current_user.role != models.UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Δεν είστε ο διοργανωτής αυτής της εκδήλωσης.")
     return event
@@ -124,6 +129,8 @@ def apply_ticket_type_updates(
     touched_ids = set()
     plans = []  # (action, existing_or_None, item, booked)
 
+    # First pass: figure out what WOULD happen (update vs create) and validate each
+    # one, without writing anything yet - so a rejected item can't leave a half-applied change.
     for item in updates:
         if item.ticket_type_id and item.ticket_type_id in existing_by_id:
             existing = existing_by_id[item.ticket_type_id]
@@ -144,6 +151,8 @@ def apply_ticket_type_updates(
     prospective_total = sum(
         t.quantity for tt_id, t in existing_by_id.items() if tt_id not in touched_ids
     )
+    # Untouched existing types' quantities + every planned update/create's quantity
+    # = what the total would be if this whole update actually went through.
     prospective_total += sum(item.quantity for _, _, item, _ in plans)
     validate_capacity(prospective_total, new_capacity)
 
@@ -207,6 +216,12 @@ def create_booking(
     if event.end_datetime <= datetime.utcnow():
         raise HTTPException(status_code=409, detail="Η εκδήλωση έχει ήδη ολοκληρωθεί.")
 
+    # THE key line for avoiding overselling: the availability check and the decrement
+    # happen as ONE atomic database statement, not a separate "read available" followed
+    # by a separate "write new value". Two simultaneous bookings racing for the last
+    # seat can't both pass this WHERE clause - the database serializes the two UPDATEs,
+    # and whichever runs second sees the already-reduced `available` and fails cleanly.
+
     result = db.execute(
         update(models.TicketType)
         .where(
@@ -215,6 +230,8 @@ def create_booking(
         )
         .values(available=models.TicketType.available - payload.number_of_tickets)
     )
+    # rowcount == 0 means the WHERE clause matched nothing - i.e. not enough seats
+    # were available at the moment this statement ran, not any other kind of failure.
     if result.rowcount == 0:
         raise HTTPException(status_code=409, detail="Δεν υπάρχουν αρκετές διαθέσιμες θέσεις για τον τύπο εισιτηρίου.")
 
@@ -246,7 +263,8 @@ def verify_messaging_relationship(db: Session, event_id: str, sender: models.Use
     event = db.query(models.Event).filter(models.Event.event_id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found.")
-
+        
+    # Branch 1: sender is the organizer -> recipient must be an attendee who booked.
     if event.organizer_id == sender.id:
         other_is_attendee_with_booking = (
             db.query(models.Booking)
@@ -256,6 +274,8 @@ def verify_messaging_relationship(db: Session, event_id: str, sender: models.Use
         )
         if not other_is_attendee_with_booking:
             raise HTTPException(status_code=403, detail="Ο παραλήπτης δεν έχει κράτηση σε αυτή την εκδήλωση.")
+    # Branch 2: sender is an attendee -> recipient must be the organizer, and the
+    # sender themself must have a booking (mirror image of branch 1).
     elif event.organizer_id == recipient.id:
         sender_has_booking = (
             db.query(models.Booking)
@@ -279,6 +299,8 @@ def serialize_message(m: models.Message) -> dict:
         "recipient_id": m.recipient_id,
         "recipient_username": m.recipient.username,
         "event_id": m.event_id,
+        # event_id is guaranteed present in practice (MessageCreate requires it), but
+        # this guard also covers the future case of a nullable/system message.
         "event_title": m.event.title if m.event_id and m.event else None,
         "subject": m.subject,
         "body": m.body,
@@ -331,6 +353,8 @@ def serialize_event(event: models.Event) -> dict:
 
 
 def serialize_event_summary(event: models.Event) -> dict:
+    # Lighter-weight shape for list/search results - price range instead of full
+    # per-ticket-type detail, one cover photo instead of the whole gallery.
     prices = [t.price for t in event.ticket_types]
     return {
         "event_id": event.event_id,
@@ -382,6 +406,8 @@ def serialize_booking(b: models.Booking) -> dict:
 def _like_escape(term: str) -> str:
     """Escapes SQL LIKE wildcards in user input so literal % or _ in a
     search term don't act as wildcards."""
+    # Backslash must be escaped FIRST, otherwise the backslashes just added for
+    # % and _ would themselves get escaped a second time.
     return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
@@ -410,6 +436,8 @@ def search_events(
     needs_distinct = False
 
     if categories:
+        # Joining to categories can produce duplicate Event rows if an event matches
+        # more than one requested category - .distinct() below cleans that up.
         query = query.join(models.Event.categories).filter(models.Category.name.in_(categories))
         needs_distinct = True
 
@@ -419,6 +447,8 @@ def search_events(
         query = query.filter(models.Event.start_datetime <= date_to)
 
     if q:
+        # unaccent_lower is the custom SQLite function registered in database.py -
+        # plain SQLite LIKE/LOWER only understand ASCII, not Greek.
         pattern = f"%{_like_escape(normalize_text(q))}%"
         query = query.filter(
             or_(
@@ -458,6 +488,8 @@ def search_events(
     if needs_distinct:
         query = query.distinct()
 
+    # .count() first (how many total matches, for pagination), THEN slice with
+    # offset/limit for the actual page of results - two separate queries.
     total = query.count()
     events = (
         query.order_by(models.Event.start_datetime.asc())
@@ -512,6 +544,8 @@ def build_events_xml(events: List[models.Event]) -> bytes:
         ET.SubElement(event_el, "Address").text = event.address
         ET.SubElement(event_el, "City").text = event.city
         ET.SubElement(event_el, "Country").text = event.country
+        # GeoLocation is optional in the DTD (marked "?") - only emitted when we
+        # actually have coordinates, rather than writing empty Latitude/Longitude.
         if event.latitude is not None and event.longitude is not None:
             ET.SubElement(event_el, "GeoLocation", Latitude=str(event.latitude), Longitude=str(event.longitude))
         ET.SubElement(event_el, "StartDateTime").text = _fmt_dt(event.start_datetime)
@@ -532,6 +566,8 @@ def build_events_xml(events: List[models.Event]) -> bytes:
         bookings_el = ET.SubElement(event_el, "Bookings")
         for b in event.bookings:
             booking_el = ET.SubElement(bookings_el, "Booking", BookingID=b.booking_id)
+            # UserID references the human-readable username, not the numeric DB id -
+            # matches the assignment's own sample XML (UserID="maria21").
             ET.SubElement(booking_el, "Attendee", UserID=b.attendee.username)
             ET.SubElement(booking_el, "Time").text = _fmt_dt(b.time)
             ET.SubElement(booking_el, "TicketTypeRef").text = _local_ticket_type_id(event.event_id, b.ticket_type_id)
@@ -543,11 +579,14 @@ def build_events_xml(events: List[models.Event]) -> bytes:
         ET.SubElement(event_el, "Status").text = event.status.value
         ET.SubElement(event_el, "Description").text = event.description
 
+        # Media is optional in the DTD too - only emitted if there's at least one photo.
         if event.photos:
             media_el = ET.SubElement(event_el, "Media")
             for p in event.photos:
                 ET.SubElement(media_el, "Photo").text = p.filename
 
+    # indent() pretty-prints (Python 3.9+); xml_declaration=True adds the
+    # <?xml version="1.0"?> header line expected of a standalone XML document.
     ET.indent(root, space="  ")
     return ET.tostring(root, encoding="utf-8", xml_declaration=True)
 
@@ -577,6 +616,10 @@ def build_events_json(events: List[models.Event]) -> dict:
         d["StartDateTime"] = _fmt_dt(event.start_datetime)
         d["EndDateTime"] = _fmt_dt(event.end_datetime)
         d["Capacity"] = event.capacity
+        # Wrapping the list under a "TicketType" key (singular, matching the XML tag
+        # name) instead of just "ticket_types": [...] mirrors how XML nests a repeated
+        # child element under its own container - keeps this a faithful JSON twin of
+        # the XML output above, not the REST API's own naming convention.
         d["TicketTypes"] = {
             "TicketType": [
                 {
@@ -628,7 +671,7 @@ def build_interaction_dataset(db: Session):
     A booking always wins over a view for the same (user, event) pair,
     since it's the stronger signal.
     """
-    pair_rating = {}
+    pair_rating = {}  # (user_id, event_id) -> rating, deduplicated across both sources
 
     bookings = db.query(models.Booking.attendee_id, models.Booking.event_id).distinct().all()
     for uid, eid in bookings:
@@ -640,6 +683,8 @@ def build_interaction_dataset(db: Session):
         if key not in pair_rating:  # never downgrade an existing booking signal
             pair_rating[key] = recommender.VIEW_SIGNAL
 
+    # The algorithm works with small dense 0..N-1 indices, not raw database ids -
+    # these two dicts are the translation layer in both directions.
     user_ids = sorted({uid for uid, _ in pair_rating})
     event_ids = sorted({eid for _, eid in pair_rating})
     user_id_to_idx = {uid: idx for idx, uid in enumerate(user_ids)}
@@ -663,6 +708,8 @@ def _popularity_fallback(db: Session, candidates: List[models.Event], limit: int
         .group_by(models.Booking.event_id)
         .all()
     )
+    # Negative count sorts most-booked first while still ascending; start_datetime
+    # then breaks ties between equally (un)popular events by which is soonest.
     ranked = sorted(
         candidates,
         key=lambda e: (-booking_counts.get(e.event_id, 0), e.start_datetime),
@@ -697,6 +744,8 @@ def get_recommendations(db: Session, user: models.User, limit: int = 10):
         .filter(models.Event.status == models.EventStatus.PUBLISHED, models.Event.end_datetime > now)
         .all()
     )
+    # Second filter pass in Python rather than SQL: "total available across all ticket
+    # types" isn't a single column, it needs summing each event's ticket_types first.
     candidates = [
         e for e in candidates
         if e.event_id not in booked_event_ids and sum(t.available for t in e.ticket_types) > 0
@@ -721,6 +770,9 @@ def get_recommendations(db: Session, user: models.User, limit: int = 10):
         model.fit(interactions, n_users=len(user_id_to_idx), n_items=len(event_id_to_idx))
         preds = model.predict_for_user(user_idx)
 
+        # Candidates the model has never seen any signal for at all (a brand new
+        # event with zero interactions from anyone) fall back to the global mean
+        # rather than an arbitrary/untrained score.
         scored = [
             (float(preds[event_id_to_idx[e.event_id]]) if e.event_id in event_id_to_idx else float(model.mu), e)
             for e in candidates
