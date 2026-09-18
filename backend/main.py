@@ -61,6 +61,8 @@ def seed_admin_user():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Runs once, when the server process starts - FastAPI's modern replacement
+    # for the older @app.on_event("startup") decorator.
     seed_admin_user()
     yield
 
@@ -240,6 +242,9 @@ def list_users(
     current_user: models.User = Depends(auth.require_admin),
 ):
     query = db.query(models.User)
+    # "== False"/"== True" (not "is False"/"is True") is intentional here: this builds
+    # a SQL WHERE clause, not a Python boolean comparison, so it needs SQLAlchemy's
+    # column-comparison overload of == rather than Python's identity check.
     if status_filter == "pending":
         query = query.filter(models.User.is_approved == False)  # noqa: E712
     elif status_filter == "approved":
@@ -285,6 +290,8 @@ def reject_user(
         raise HTTPException(status_code=404, detail="User not found.")
     if user.role == models.UserRole.ADMIN:
         raise HTTPException(status_code=400, detail="Cannot reject an admin account.")
+    # Rejection deletes the pending row outright (unlike approve, which just flips a
+    # flag) - a rejected registration isn't meant to be recoverable.
     db.delete(user)
     db.commit()
     return None
@@ -308,6 +315,8 @@ def export_events(
     events = db.query(models.Event).order_by(models.Event.event_id).all()
     if export_format == "xml":
         xml_bytes = crud.build_events_xml(events)
+        # Content-Disposition: attachment prompts the browser to download the file
+        # under this name, rather than trying to display raw XML inline.
         return Response(
             content=xml_bytes,
             media_type="application/xml",
@@ -351,6 +360,7 @@ def create_event(
     db.add(event)
     db.flush()  # event_id is now valid to reference from ticket types
 
+    # index starts at 1 so generated ids read "EV1024-T1", "EV1024-T2", ... not T0.
     for idx, tt in enumerate(payload.ticket_types, start=1):
         db.add(models.TicketType(
             ticket_type_id=crud.next_ticket_type_id(event_id, idx),
@@ -425,6 +435,9 @@ def update_event(
         if payload.end_datetime <= payload.start_datetime:
             raise HTTPException(status_code=422, detail="end_datetime must be after start_datetime.")
 
+    # Every plain field is optional on EventUpdate - only ones actually present in the
+    # request body get applied, so a partial PUT never wipes out fields the caller
+    # didn't mean to touch.
     simple_fields = [
         "title", "event_type", "venue", "address", "city", "country",
         "latitude", "longitude", "start_datetime", "end_datetime", "description",
@@ -468,6 +481,8 @@ def delete_event(
     has_bookings = db.query(models.Booking).filter(models.Booking.event_id == event_id).first() is not None
     if has_bookings:
         raise HTTPException(status_code=409, detail="Η εκδήλωση έχει ήδη κρατήσεις. Χρησιμοποιήστε ακύρωση αντί για διαγραφή.")
+    # Deletable states are DRAFT (never published) or PUBLISHED-but-no-bookings-yet;
+    # CANCELLED/COMPLETED are excluded here since their data should stay for the record.
     if event.status not in (models.EventStatus.DRAFT, models.EventStatus.PUBLISHED):
         raise HTTPException(status_code=409, detail="Δεν είναι δυνατή η διαγραφή ακυρωμένης ή ολοκληρωμένης εκδήλωσης.")
     db.delete(event)
@@ -484,6 +499,7 @@ def publish_event(
     event = crud.get_owned_event(db, event_id, current_user)
     if event.status != models.EventStatus.DRAFT:
         raise HTTPException(status_code=400, detail="Μόνο εκδηλώσεις σε κατάσταση DRAFT μπορούν να δημοσιευτούν.")
+    # Publishing with zero ticket types would create a "live" event nobody can book
     if not event.ticket_types:
         raise HTTPException(status_code=400, detail="Προσθέστε τουλάχιστον έναν τύπο εισιτηρίου πριν τη δημοσίευση.")
     event.status = models.EventStatus.PUBLISHED
@@ -553,6 +569,8 @@ async def upload_event_photo(
         raise HTTPException(status_code=422, detail="Η εικόνα υπερβαίνει το μέγιστο μέγεθος των 5MB.")
 
     extension = Path(file.filename or "").suffix.lower() or ".jpg"
+    # uuid4().hex gives a random 32-character name - collision-proof, and safe even if
+    # the client's original filename contained path-traversal characters like "../".
     stored_filename = f"{uuid.uuid4().hex}{extension}"
     (UPLOAD_DIR / stored_filename).write_bytes(contents)
 
@@ -575,6 +593,8 @@ def delete_event_photo(
     ).first()
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found.")
+    # Remove the actual file from disk too, not just the DB row, so orphaned
+    # image files don't accumulate in static/uploads.
     file_path = UPLOAD_DIR / photo.filename
     if file_path.exists():
         file_path.unlink()
