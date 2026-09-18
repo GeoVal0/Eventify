@@ -6,6 +6,9 @@ from enum import Enum
 # ==========================================
 # Enums (Must match models.py)
 # ==========================================
+# Inheriting from (str, Enum) - not plain Enum like models.py uses - so these
+# serialize directly as plain strings in JSON responses (e.g. "ADMIN", not an enum
+# wrapper object).
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
     ORGANIZER = "ORGANIZER"
@@ -56,6 +59,8 @@ class UserCreate(BaseModel):
     @field_validator("confirm_password")
     @classmethod
     def passwords_match(cls, v, info):
+        # info.data holds the other fields already validated before this one, in
+        # declaration order - that's how this reaches back to compare against "password".
         if "password" in info.data and v != info.data["password"]:
             raise ValueError("Passwords do not match.")
         return v
@@ -123,6 +128,8 @@ class TicketTypeResponse(BaseModel):
     quantity: int
     available: int
 
+    # Lets this schema populate itself straight from a SQLAlchemy object's
+    # attributes (t.price, t.available, ...) instead of requiring a plain dict.
     model_config = ConfigDict(from_attributes=True)
 
 class PhotoResponse(BaseModel):
@@ -156,6 +163,7 @@ class EventCreate(BaseModel):
     @field_validator("end_datetime")
     @classmethod
     def end_after_start(cls, v, info):
+        # Same info.data pattern as above - start_datetime must be declared first.
         start = info.data.get("start_datetime")
         if start and v <= start:
             raise ValueError("end_datetime must be after start_datetime.")
