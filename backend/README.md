@@ -70,22 +70,8 @@ accordingly (`https://localhost:8000`), and note the CORS origins below.
 somewhere else (check the terminal output when you run `npm run dev`), add that origin
 to the `origins` list in `main.py`.
 
-## Architecture
 
-| File | Responsibility |
-|---|---|
-| `models.py` | SQLAlchemy ORM models - the relational schema, mapped to Python classes (assignment's explicit "REST backend maps the relational DB to an object-oriented model" requirement). |
-| `schemas.py` | Pydantic request/response schemas - what the API actually accepts and returns, independent of the DB shape. |
-| `database.py` | SQLite engine/session setup, plus a registered SQL function (`unaccent_lower`) for accent/case-insensitive Greek text search. |
-| `auth.py` | Password hashing (bcrypt), JWT issuing/verification, and the role-based-access-control dependencies (`require_admin`, `require_organizer`, `require_attendee`, etc.) used throughout `main.py`. |
-| `crud.py` | All business logic: ID generation, capacity/availability validation, event search, XML/JSON export, the recommender's DB integration. Kept separate from `main.py` so routes stay thin and this logic is unit-testable on its own. |
-| `main.py` | FastAPI app + every route. Thin wiring layer over `crud.py`/`auth.py`. |
-| `recommender.py` | The Biased Matrix Factorization algorithm itself - pure numpy, no recommender libraries, implemented from scratch per the assignment's explicit requirement. Deliberately has no database dependency so it can be tested/demonstrated standalone. |
-| `recommender_demo.py` | Standalone correctness proof: synthetic data with *known* structure (two user clusters with opposite preferences), checked against what the trained model actually learned. Run with `python3 recommender_demo.py`. |
-| `recommender_eclass_dataset_eval.py` | Rigorous train/test evaluation on the real dataset provided for the assignment (`event_interest.csv`) - proper 80/20 split, RMSE against two baselines, pairwise ranking accuracy. Expects the dataset at `/home/claude/dataset/rel_event_csvs/event_interest.csv` by default; **update `DATA_PATH` at the top of the file** to wherever you place the provided CSVs locally. Run with `python3 recommender_eclass_dataset_eval.py`. |
-| `generate_dev_cert.sh` | One-time local HTTPS certificate generation (see above). |
-
-## Key design decisions worth knowing for the write-up / oral exam
+## Design Decisions:
 
 - **Registration role is restricted server-side** to `ATTENDEE`/`ORGANIZER` only -
   `ADMIN` cannot be self-registered; it only exists via the seeded account.
@@ -116,3 +102,56 @@ to the `origins` list in `main.py`.
   proven-reliable result from `recommender_demo.py`. Worth mentioning directly if asked
   about limitations - it's an honest, well-understood property of matrix factorization
   at extreme sparsity, not a flaw specific to this implementation.
+
+
+## Step by step of backend design:
+
+The backend was developed independently of the front end at the start of the assignment, split into the following steps:
+
+### Step 1 — Data model & API contract
+This step established the relational schema as SQLAlchemy models and defined the full
+REST API surface up front. I began by writing `API_CONTRACT.md` before touching most of the
+actual endpoint code, so my partner had a stable interface to build the frontend
+against without needing to wait for the backend to be finished first. 
+
+### Step 2 — Auth & RBAC
+Iimplemented user registration with admin-approval, login via JWT (chose JWT for simplicity), and a
+built-in  admini account, along with the permission system distinguishing
+guest, attendee, organizer, and admin access throughout the API. Split
+role-checking into a reusable `require_role(...)` factory rather than one function per
+role, and deliberately made registration reject `role: "ADMIN"` server-side for security purposes.
+
+### Step 3 — Events CRUD & capacity validation
+Built full CRUD for events, along with the ticket-type system and the rule that ticket quantities can
+never exceed an event's total capacity. It covers the event lifecycle (draft →
+published → cancelled) and the constraints on when an event can be edited, cancelled,
+or removed entirely.
+
+### Step 4 — Search & browsing
+This step added public event discovery: filtering by category, free-text search across
+title and description, date range, price range, and location, with paginated results.
+
+
+### Step 5 — Booking system
+Implemented ticket booking for attendees, including real-time availability
+checks and safe handling of simultaneous booking attempts for the same limited stock.
+
+
+### Step 6 — Messaging
+This step added a messaging system between organizers and attendees who share a
+booking, including inbox and sent views, read/unread tracking, message deletion, and
+automatic notifications to all affected attendees when an event is cancelled.
+
+### Step 7 — Data export
+This step implemented administrator-only export of all event data in both XML and JSON format. It covers every event regardless of status, with nested ticket
+type, booking, and media information included in the output.
+
+### Step 8 — Recommendation engine
+Implemented the Biased Matrix Factorization recommendation algorithm from
+scratch using plain numpy, trained on each attendee's booking and viewing history to
+suggest relevant events. It covers model training, cold-start handling for new users,
+and validation of the algorithm's correctness against both synthetic data and the
+dataset.
+
+
+  
