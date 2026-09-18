@@ -161,6 +161,8 @@ class BiasedMatrixFactorization:
             sq_error_sum = 0.0
 
             for u, i, r in data:
+                # @ is numpy's matrix/vector multiplication operator - here it's a dot
+                # product between two length-K vectors, giving a single number.
                 pred = self.mu + self.b_u[u] + self.b_i[i] + self.P[u] @ self.Q[i]
                 err = r - pred
                 sq_error_sum += err * err
