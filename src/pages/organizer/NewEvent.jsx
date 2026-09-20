@@ -10,15 +10,17 @@ import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
-import {styled } from "@mui/material/styles";
+import {styled} from "@mui/material/styles";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import AppTheme from "../../shared-theme/AppTheme";
-import {useNavigate } from "react-router-dom";
-import {MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import Link from '@mui/material/Link';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import {useNavigate} from "react-router-dom";
+import {MapContainer, TileLayer, Marker, useMapEvents} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import {createEvent } from '../../api';
+import {createEvent} from '../../api';
 
 // setup map icon
 const customIcon = new L.Icon({
@@ -344,6 +346,24 @@ export default function CreateEvent() {
     <AppTheme>
       <CssBaseline enableColorScheme />
       <EditContainer direction="column" justifyContent="flex-start">
+
+        {/* breadcrumbs */}
+        <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+          <Breadcrumbs aria-label="breadcrumb">
+            <Link 
+              underline="hover" 
+              color="inherit" 
+              onClick={() => navigate('/Home')} 
+              sx={{ cursor: 'pointer' }}
+            >
+              Αρχική
+            </Link>
+            <Typography color="text.primary" fontWeight="bold">
+              Δημιουργία Νέας Εκδήλωσης
+            </Typography>
+          </Breadcrumbs>
+        </Box>
+
         <Card variant="outlined" 
           sx={{
             backgroundColor: 'white',

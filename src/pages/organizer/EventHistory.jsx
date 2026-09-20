@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Typography, Button, Card, CardContent, Select, MenuItem, FormControl, InputLabel, CircularProgress } from '@mui/material';
+import {Box, Typography, Button, Card, CardContent, Select, MenuItem, FormControl, InputLabel, CircularProgress, Breadcrumbs, Link } from '@mui/material';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useAuth } from '../../context/AuthContext';
 import {useNavigate } from 'react-router-dom';
@@ -66,7 +66,7 @@ export default function EventHistoryPage(props) {
     };
   };
 
-  // --- ACTIONS ---
+
   const handlePublish = async (eventId) => {
     if (!window.confirm("Είστε σίγουροι ότι θέλετε να δημοσιεύσετε αυτή την εκδήλωση;")) return;
   
@@ -111,6 +111,23 @@ export default function EventHistoryPage(props) {
             alignItems: 'center',
             overflowY: 'auto' 
        }}>
+
+        {/* breadcrumbs */}
+        <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+          <Breadcrumbs aria-label="breadcrumb">
+            <Link 
+              underline="hover" 
+              color="inherit" 
+              onClick={() => navigate('/Home')} 
+              sx={{ cursor: 'pointer' }}
+            >
+              Αρχική
+            </Link>
+            <Typography color="text.primary" fontWeight="bold">
+              Ιστορικό Εκδηλώσεων
+            </Typography>
+          </Breadcrumbs>
+        </Box>
 
           {/* filters */}
           <Box sx={{width: '100%', maxWidth: '900px', mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2}}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from 'react';
-import {Box, Typography, Button, Avatar, Card, CardContent, Divider} from '@mui/material';
+import {Box, Typography, Button, Avatar, Card, CardContent, Divider, Breadcrumbs, Link} from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useLocation, useNavigate} from 'react-router-dom';
@@ -11,7 +11,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import {getEventDetail, getEventBookings, cancelEvent, deleteEvent, notifyCancellation} from '../../api';
+import {getEventDetail, getEventBookings, publishEvent, cancelEvent, deleteEvent, notifyCancellation} from '../../api';
 
 // setup map icon
 const customIcon = new L.Icon({
@@ -151,11 +151,38 @@ export default function ViewEvent(props) {
             flex: 1, 
             bgcolor: 'background.default', 
             p: { xs: 2, md: 4}, 
-            display: 'flex', 
-            justifyContent: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
             overflowY: 'auto'
         }}
         >
+
+          {/* breadcrumbs */}
+          <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+            <Breadcrumbs aria-label="breadcrumb">
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/Home')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Αρχική
+              </Link>
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/organizer/EventHistory')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Ιστορικό Εκδηλώσεων
+              </Link>
+              <Typography color="text.primary" fontWeight="bold">
+                Προβολή Εκδήλωσης
+              </Typography>
+            </Breadcrumbs>
+          </Box>
+
           <Box sx={{width: '100%', maxWidth: '1000px', display: 'flex', flexDirection: 'column', gap: 4}}>
             
             <Typography variant="h5" fontWeight="bold" sx={{mb: -2}}>Λεπτομέρειες Εκδήλωσης</Typography>

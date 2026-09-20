@@ -15,6 +15,9 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import AppTheme from "../../shared-theme/AppTheme";
 import Alert from "@mui/material/Alert";
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import Link from '@mui/material/Link';
+
 import {useNavigate, useLocation } from "react-router-dom";
 import {MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -403,12 +406,39 @@ export default function EditEvent() {
     <AppTheme>
       <CssBaseline enableColorScheme />
       <EditContainer direction="column" justifyContent="flex-start">
+
+        {/* breadcrumbs */}
+          <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+            <Breadcrumbs aria-label="breadcrumb">
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/Home')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Αρχική
+              </Link>
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/organizer/EventHistory')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Ιστορικό Εκδηλώσεων
+              </Link>
+              <Typography color="text.primary" fontWeight="bold">
+                Τροποποίηση Εκδήλωσης
+              </Typography>
+            </Breadcrumbs>
+          </Box>
+
+
         <Card variant="outlined" sx={{
             backgroundColor: 'white',
             borderColor: '#ddd'
          }}>
           <Typography component="h1" variant="h4">
-            Επεξεργασία Εκδήλωσης
+            Τροποποίηση Εκδήλωσης
           </Typography>
 
           <Box

@@ -24,9 +24,10 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
 
-import {useAuth } from "../../context/AuthContext";
-import {useNavigate } from "react-router-dom";
+import {useAuth} from "../../context/AuthContext";
+import {useNavigate} from "react-router-dom";
 
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -286,6 +287,23 @@ const handleSubmit = async (event) => {
       <CssBaseline enableColorScheme />
 
       <SignUpContainer direction="column" justifyContent="flex-start">
+        
+        {/* breadcrumbs */}
+          <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+            <Breadcrumbs aria-label="breadcrumb">
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/Home')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Αρχική
+              </Link>
+              <Typography color="text.primary" fontWeight="bold">
+                Εγγραφή για Χρήστες
+              </Typography>
+            </Breadcrumbs>
+          </Box>
 
         <Card variant="outlined">
           <Typography

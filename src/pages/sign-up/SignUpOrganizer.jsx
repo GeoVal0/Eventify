@@ -11,7 +11,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
-import {styled } from '@mui/material/styles';
+import {styled} from '@mui/material/styles';
 import AppTheme from '../../shared-theme/AppTheme';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -24,8 +24,9 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import {useAuth } from "../../context/AuthContext";
-import {useNavigate } from "react-router-dom";
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import {useAuth} from "../../context/AuthContext";
+import {useNavigate} from "react-router-dom";
 
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -284,6 +285,23 @@ export default function SignUpOrganizer(props) {
       <CssBaseline enableColorScheme />
 
       <SignUpContainer direction="column" justifyContent="flex-start">
+
+        {/* breadcrumbs */}
+        <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+          <Breadcrumbs aria-label="breadcrumb">
+            <Link 
+              underline="hover" 
+              color="inherit" 
+              onClick={() => navigate('/Home')} 
+              sx={{ cursor: 'pointer' }}
+            >
+              Αρχική
+            </Link>
+            <Typography color="text.primary" fontWeight="bold">
+              Εγγραφή για Διοργανωτές
+            </Typography>
+          </Breadcrumbs>
+        </Box>
 
         <Card variant="outlined">
           <Typography

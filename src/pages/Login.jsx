@@ -10,15 +10,16 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
-import {styled } from '@mui/material/styles';
+import {styled} from '@mui/material/styles';
 import Alert from '@mui/material/Alert';
 import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import AppTheme from '../shared-theme/AppTheme';
-import {useNavigate, useLocation } from "react-router-dom";
-import {useAuth } from "../context/AuthContext";
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import {useNavigate, useLocation} from "react-router-dom";
+import {useAuth} from "../context/AuthContext";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -153,6 +154,24 @@ export default function SignIn(props) {
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="space-between">
+
+        {/* breadcrumbs */}
+        <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+          <Breadcrumbs aria-label="breadcrumb">
+            <Link 
+              underline="hover" 
+              color="inherit" 
+              onClick={() => navigate('/Home')} 
+              sx={{ cursor: 'pointer' }}
+            >
+              Αρχική
+            </Link>
+            <Typography color="text.primary" fontWeight="bold">
+              Σύνδεση
+            </Typography>
+          </Breadcrumbs>
+        </Box>
+
         <Card variant="outlined">
           <Typography
             component="h1"

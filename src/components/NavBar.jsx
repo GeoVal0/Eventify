@@ -199,10 +199,10 @@ export default function Navbar() {
                 PaperProps={{ elevation: 3, sx: { mt: 1, minWidth: 150 }}}
               >
                 <MenuItem onClick={() => { handleRegisterClose(); navigate("/sign-up/SignUpAttendee");}}>
-                  Χρήστης
+                  ως Χρήστης
                 </MenuItem>
                 <MenuItem onClick={() => { handleRegisterClose(); navigate("/sign-up/SignUpOrganizer");}}>
-                  Διοργανωτής
+                  ως Διοργανωτής
                 </MenuItem>
               </Menu>
 

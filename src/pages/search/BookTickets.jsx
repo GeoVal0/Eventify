@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Typography, Button, Avatar, Grid, Card, Select, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress} from '@mui/material';
+import {Box, Typography, Button, Avatar, Grid, Card, Select, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress, Breadcrumbs, Link} from '@mui/material';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useLocation, useNavigate } from 'react-router-dom';
 import {useAuth } from '../../context/AuthContext'; 
@@ -183,10 +183,38 @@ const handleConfirm = async () => {
             bgcolor: 'background.default', 
             p: { xs: 2, md: 4 }, 
             display: 'flex', 
-            justifyContent: 'center',
+            // justifyContent: 'center',
+            flexDirection: 'column',
+            alignItems: 'center',
             overflowY: 'auto'
          }}
         >
+
+          {/* breadcrumbs */}
+          <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+            <Breadcrumbs aria-label="breadcrumb">
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/Home')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Αρχική
+              </Link>
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/search/SearchEvents')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Αναζήτηση Εκδηλώσεων
+              </Link>
+              <Typography color="text.primary" fontWeight="bold">
+                Κράτηση Εισιτηρίων
+              </Typography>
+            </Breadcrumbs>
+          </Box>
+
           <Box sx={cardStyle}>
             <Box sx={{
               display: 'flex', 

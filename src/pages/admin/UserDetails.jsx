@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Typography, Button, Avatar, Grid, CircularProgress } from '@mui/material';
+import {Box, Typography, Button, Avatar, Grid, CircularProgress, Breadcrumbs, Link } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useLocation, useNavigate } from 'react-router-dom';
@@ -115,11 +115,38 @@ export default function UserDetails(props) {
             flex: 1, 
             bgcolor: 'background.default', 
             p: { xs: 2, md: 4 }, 
-            display: 'flex', 
-            justifyContent: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
             overflowY: 'auto'
          }}
         >
+
+          {/* breadcrumbs */}
+          <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+            <Breadcrumbs aria-label="breadcrumb">
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/Home')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Αρχική
+              </Link>
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/admin/UserList')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Διαχείριση Χρηστών
+              </Link>
+              <Typography color="text.primary" fontWeight="bold">
+                Στοιχεία Χρήστη
+              </Typography>
+            </Breadcrumbs>
+          </Box>
+
           <Box sx={cardStyle}>
             
             <Box sx={{

@@ -19,6 +19,8 @@ import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import Link from '@mui/material/Link';
 import {useAuth } from "../../context/AuthContext";
 import {useNavigate } from "react-router-dom";
 
@@ -313,6 +315,24 @@ export default function EditOrganizer(props) {
       <CssBaseline enableColorScheme />
 
       <EditContainer direction="column" justifyContent="flex-start">
+
+        {/* breadcrumbs */}
+        <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+          <Breadcrumbs aria-label="breadcrumb">
+            <Link 
+              underline="hover" 
+              color="inherit" 
+              onClick={() => navigate('/Home')} 
+              sx={{ cursor: 'pointer' }}
+            >
+              Αρχική
+            </Link>
+            <Typography color="text.primary" fontWeight="bold">
+              Επεξεργασία Προφίλ Διοργανωτή
+            </Typography>
+          </Breadcrumbs>
+        </Box>
+
         <Card variant="outlined">
           <Typography component="h1" variant="h4" sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}>
             Επεξεργασία <span style={{fontSize: '0.6em', fontWeight: 'normal'}}>Προφίλ Διοργανωτή</span>
@@ -534,18 +554,8 @@ export default function EditOrganizer(props) {
             </FormControl>
 
             {/* save and cancel buttons */}
-            <Box sx={{mt: 3, display: 'flex', flexDirection: 'column', gap: 1}}>
-              <Button type="submit" fullWidth variant="contained" size="large"
-              sx={{
-                  background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important',
-                  fontWeight: 'bold', 
-                  color: 'white',
-                  border: '1px solid #2e7d32',
-                  boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
-               }}>
-                Αποθήκευση Αλλαγών
-              </Button>
-              <Button type="button" fullWidth variant="outlined" size="large"
+            <Box sx={{mt: 3, display: 'flex', justifyContent: 'space-between', gap: 1}}>
+              <Button type="button" variant="outlined" size="large"
               sx={{
                 background: 'linear-gradient(to bottom, #8a8c8aff, #525151ff) !important',
                 fontWeight: 'bold', 
@@ -555,6 +565,17 @@ export default function EditOrganizer(props) {
              }}
               onClick={() => navigate("/Home")}>
                 Ακύρωση
+              </Button>
+              
+              <Button type="submit" variant="contained" size="large"
+              sx={{
+                  background: 'linear-gradient(to bottom, #53b858ff, #1d5920ff) !important',
+                  fontWeight: 'bold', 
+                  color: 'white',
+                  border: '1px solid #2e7d32',
+                  boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
+               }}>
+                Αποθήκευση Αλλαγών
               </Button>
             </Box>
           </Box>

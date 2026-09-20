@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Typography, Button, Card, CardContent, Avatar, Select, MenuItem, FormControl, InputLabel, CircularProgress} from '@mui/material';
+import {Box, Typography, Button, Card, CardContent, Avatar, Select, MenuItem, FormControl, InputLabel, CircularProgress, Breadcrumbs, Link} from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useAuth } from '../../context/AuthContext';
@@ -119,6 +119,23 @@ export default function ApplicationHistoryPage(props) {
             overflowY: 'auto' 
          }}
         >
+
+          {/* breadcrumbs */}
+          <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+            <Breadcrumbs aria-label="breadcrumb">
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/Home')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Αρχική
+              </Link>
+              <Typography color="text.primary" fontWeight="bold">
+                Διαχείριση Χρηστών
+              </Typography>
+            </Breadcrumbs>
+          </Box>
         
           <Box sx={{width: '100%', maxWidth: '1000px', mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2}}>
               <Box sx={{display: 'flex', gap: 2}}>

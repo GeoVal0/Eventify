@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Box, Typography, Button, Grid, Card, CardContent, TextField, Checkbox, FormControlLabel, Avatar, InputAdornment, Divider} from '@mui/material';
+import {Box, Typography, Button, Grid, Card, CardContent, TextField, Checkbox, FormControlLabel, Avatar, InputAdornment, Divider, Breadcrumbs, Link} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useNavigate, useLocation } from 'react-router-dom';
@@ -217,9 +217,28 @@ export default function EventSearchPage(props) {
             bgcolor: 'background.default', 
             color: 'text.primary', 
             p: { xs: 2, md: 4 }, 
-            overflowY: 'auto'
+            overflowY: 'auto',
+            flexDirection: 'column',
+            alignItems: 'center'
          }}
         >
+
+          {/* breadcrumbs */}
+          <Box sx={{ width: '100%', maxWidth: '1200px', mb: 2 }}>
+            <Breadcrumbs aria-label="breadcrumb">
+              <Link 
+                underline="hover" 
+                color="inherit" 
+                onClick={() => navigate('/Home')} 
+                sx={{ cursor: 'pointer' }}
+              >
+                Αρχική
+              </Link>
+              <Typography color="text.primary" fontWeight="bold">
+                Αναζήτηση Εκδηλώσεων
+              </Typography>
+            </Breadcrumbs>
+          </Box>
         
           <Grid container spacing={4} alignItems="flex-start" justifyContent={!user ? 'center' : 'flex-start'}>
             {/* filters column */}
