@@ -60,8 +60,8 @@ export default function ViewEvent(props) {
     const fetchData = async () => {
       try {
         const [eventData, bookingsData] = await Promise.all([
-          getEventDetail(eventId),
-          getEventBookings(eventId)
+          getEventDetail(eventId),      // GET /api/events/{eventId}
+          getEventBookings(eventId)     // GET /api/organizer/events/{eventId}/bookings
         ]);
         setEvent(eventData);
         setBookedUsers(bookingsData);
@@ -104,7 +104,7 @@ export default function ViewEvent(props) {
   const handlePublish = async () => {
     if (!window.confirm("Είστε σίγουροι ότι θέλετε να δημοσιεύσετε αυτή την εκδήλωση;")) return;
     try {
-      await publishEvent(eventId);
+      await publishEvent(eventId);        // PUT /api/events/{eventId}/publish
       setEvent({ ...event, status: 'PUBLISHED'});
       alert("Η εκδήλωση δημοσιεύτηκε επιτυχώς!");
    } catch (error) {
@@ -517,5 +517,3 @@ export default function ViewEvent(props) {
     </AppTheme>
   );
 }
-
-//////////otan patao diagrafi se ena event diagrafetai entelos

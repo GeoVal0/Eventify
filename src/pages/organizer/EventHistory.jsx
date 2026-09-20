@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {Box, Typography, Button, Card, CardContent, Select, MenuItem, FormControl, InputLabel, CircularProgress, Breadcrumbs, Link } from '@mui/material';
 import AppTheme from '../../shared-theme/AppTheme';
-import {useAuth } from '../../context/AuthContext';
-import {useNavigate } from 'react-router-dom';
-import {getMyEvents, publishEvent } from '../../api';
+import {useNavigate} from 'react-router-dom';
+import {getMyEvents, publishEvent} from '../../api';
 
+
+// if the organizer has not uploaded any photos for the event, the event will take a deafult photo based on the category 
 const CATEGORY_IMAGES = {
   music: '/public/1061513-taylor-swift-en-concert-a-paris-la-defense-arena-on-y-etait-on-vous-raconte.jpg',
   theater: '/public/theater_01.jpg',
@@ -28,7 +29,7 @@ export default function EventHistoryPage(props) {
   const [sortOrder, setSortOrder] = useState('newest'); 
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // fetches all data for each event
+  // fetches all data for each event the organizer has created
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -71,7 +72,7 @@ export default function EventHistoryPage(props) {
     if (!window.confirm("Είστε σίγουροι ότι θέλετε να δημοσιεύσετε αυτή την εκδήλωση;")) return;
   
     try {
-      await publishEvent(eventId);
+      await publishEvent(eventId);          // PUT /api/events/{event_id}/publish
   
       setEvents(prev => prev.map(e => 
         e.event_id === eventId ? { ...e, status: 'PUBLISHED' } : e

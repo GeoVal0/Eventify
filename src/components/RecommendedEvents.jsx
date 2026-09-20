@@ -4,21 +4,15 @@ import {useNavigate } from 'react-router-dom';
 import {useAuth } from '../context/AuthContext';
 import {getRecommendations, API_BASE_URL } from '../api';
 
-// Personalized event recommendations (assignment §13): backed by
-// GET /api/recommendations, which trains a fresh Biased Matrix
-// Factorization model server-side on this attendee's booking/view
-// history (see recommender.py). Attendee-only on the backend
-// (auth.require_attendee) -- organizers/admins get a 403, which this
-// treats as "nothing to show here" rather than an error, since it's
-// expected role behavior, not a failure.
 export default function RecommendedEvents() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [events, setEvents] = useState([]);
-  const [coldStart, setColdStart] = useState(false);
+  const [events, setEvents] = useState([]);     // stores the recommended events array
+  const [coldStart, setColdStart] = useState(false);  // true = not enough data -> popular events, false = enough data -> persnonalized recommendations
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(true);
 
+  // fetches data
   useEffect(() => {
     if (!user) {
       setVisible(false);
@@ -28,16 +22,12 @@ export default function RecommendedEvents() {
     let cancelled = false;
     const fetchRecommendations = async () => {
       try {
-        const data = await getRecommendations(10);
+        const data = await getRecommendations(10);    // fetches up to 10 personalized events
         if (cancelled) return;
         setEvents(data.events || []);
         setColdStart(!!data.cold_start);
       } catch (error) {
-        // A 403 here just means this user isn't an attendee (organizer/
-        // admin) -- the backend enforces that, so quietly hide the section
-        // instead of showing an error for something that isn't one.
-
-        // organizers / admin get 403 
+        // organizers / admin get 403, as recommendations are only for attendees, they still see the generic carousel though
         if (!cancelled) {
           console.error("Error fetching recommendations:", error);
           setVisible(false);
@@ -52,6 +42,9 @@ export default function RecommendedEvents() {
 
   if (!visible) return null;
   if (!loading && events.length === 0) return null;
+
+
+  // helpers
 
   const formatDate = (iso) => {
     const d = new Date(iso);

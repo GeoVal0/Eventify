@@ -110,6 +110,7 @@ export default function EditAttendee(props) {
   React.useEffect(() => {
     if (!user) return;
 
+    // prefills the form
     const populateForm = (data) => {
       if (!data) return;
       setUsername(data.username || "");
@@ -137,7 +138,7 @@ export default function EditAttendee(props) {
         const token = localStorage.getItem('token') || localStorage.getItem('access_token');
         const storedUser = JSON.parse(localStorage.getItem('user_data') || '{}');
 
-        // pre fill the form with localStorage
+        // pre fill the form from localStorage so the user doesnt wait
         populateForm({ ...storedUser, ...user });
 
         if (!token) {
@@ -262,7 +263,7 @@ export default function EditAttendee(props) {
       const token = localStorage.getItem('token') || localStorage.getItem('access_token');
       const storedUser = JSON.parse(localStorage.getItem('user_data') || '{}');
       
-      const payload = {
+      const payload = {         // object creation with the new, edited data
         first_name: firstName,
         last_name: lastName,
         gender: gender,
@@ -270,10 +271,10 @@ export default function EditAttendee(props) {
         phone: phone,
       };
       
-      if (password) payload.password = password;
+      if (password) payload.password = password;    // new password is optional
 
       const response = await fetch(`http://localhost:8000/api/auth/me`, {
-        method: 'PUT',
+        method: 'PUT',                // call PUT to update the profile
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -286,7 +287,7 @@ export default function EditAttendee(props) {
         throw new Error(errorData.detail || "Σφάλμα κατά την αποθήκευση.");
       }
 
-      const updatedUser = { ...storedUser, ...payload };
+      const updatedUser = { ...storedUser, ...payload };    // localstorage data gets updated too
       localStorage.setItem('user_data', JSON.stringify(updatedUser));
       
       alert("Το προφίλ χρήστη ενημερώθηκε επιτυχώς!");

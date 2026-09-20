@@ -103,6 +103,7 @@ export default function EventSearchPage(props) {
     setPriceRange(newValue);
   };
 
+  // gets all publiched events
   useEffect(() => {
     const fetchEventData = async () => {
       try {
@@ -157,10 +158,10 @@ export default function EventSearchPage(props) {
       if (!city.includes(areaSearch) && !address.includes(areaSearch)) return false;
     }
 
-    // 5. Broad Category Filter (Translates UI Greek strings to Backend English/Greek strings)
+    // category filtering
     const eventCategories = Array.isArray(event.categories) ? event.categories.map(c => c.toLowerCase()) : [];
     const eventType = (event.event_type || '').toLowerCase();
-    const allEventTags = [...eventCategories, eventType]; // Combine tags and types
+    const allEventTags = [...eventCategories, eventType];
 
     if (selectedCategories.length > 0 && !selectedCategories.includes('Όλες')) {
       const CATEGORY_MAP = {

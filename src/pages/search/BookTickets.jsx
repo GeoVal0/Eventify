@@ -182,8 +182,7 @@ const handleConfirm = async () => {
             flex: 1, 
             bgcolor: 'background.default', 
             p: { xs: 2, md: 4 }, 
-            display: 'flex', 
-            // justifyContent: 'center',
+            display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             overflowY: 'auto'

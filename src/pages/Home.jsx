@@ -29,10 +29,10 @@ export default function Home(props) {
   const [events, setEvents] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
 
-  // personalized recommendations, requires being logged in. else shows all the events
+  // personalized recommendations require being logged in as attendee. else shows all the events
   const [recommendedEvents, setRecommendedEvents] = useState([]);
   const [usingRecommendations, setUsingRecommendations] = useState(false);
-  const [coldStart, setColdStart] = useState(false);
+  const [coldStart, setColdStart] = useState(false);    // coldstart is true if the user has not viewed or booked anything
   
   const dateRef = useRef(null);
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ export default function Home(props) {
         const data = await getEvents();
         const fetchedEvents = data.items || data || [];
 
-        const now = new Date();
+        const now = new Date();   // filters out past events
         const activeEvents = fetchedEvents.filter(ev => {
           const eventDate = new Date(ev.start_datetime);
           return !isNaN(eventDate) && eventDate >= now;
@@ -70,7 +70,7 @@ export default function Home(props) {
       
       const fetchRecommendations = async () => {
         try {
-          const data = await getRecommendations(10);
+          const data = await getRecommendations(10);    // top 10 recommendations
           setRecommendedEvents(data.events || []);
           setColdStart(!!data.cold_start);
           setUsingRecommendations(true);

@@ -14,8 +14,10 @@ export default function MessagesNavIndicator() {
   useEffect(() => {
     if (!user) return;
 
+    // a flag to prevent state upadtes if the component unmounts before the fetch completes
     let cancelled = false;
 
+    // fetches the users messages and calculates how many are unread
     const fetchUnread = async () => {
       try {
         const data = await getMessages();
@@ -29,7 +31,8 @@ export default function MessagesNavIndicator() {
     };
 
     fetchUnread();
-    const interval = setInterval(fetchUnread, 30000); // poll for new messages while navigating
+    const interval = setInterval(fetchUnread, 10000); // poll for new messages every 10secs while navigating
+    // runs when the the component unmounts or when the 'user' dependency changes
     return () => {
       cancelled = true;
       clearInterval(interval);

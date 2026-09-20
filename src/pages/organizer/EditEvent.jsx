@@ -127,10 +127,6 @@ export default function EditEvent() {
   const [ticketsErrorMessage, setTicketsErrorMessage] = React.useState('');
 
   const [photos, setPhotos] = React.useState([]);
-
-  // Existing photos already on the event (from EventResponse.photos, which
-  // is [{id, filename}, ...] -- id is required to target one for removal
-  // via DELETE /api/events/{event_id}/photos/{photo_id}).
   const [existingPhotos, setExistingPhotos] = React.useState([]);
   const [deletingPhotoId, setDeletingPhotoId] = React.useState(null);
 
@@ -220,12 +216,8 @@ export default function EditEvent() {
   const handleRemovePhoto = (index) => {
     setPhotos(photos.filter((_, i) => i !== index));
   };
-  // the new-photo
-  // upload above already works the same way (happens right in handleSave
-  // as its own request), so this keeps both photo actions consistent
-  // instead of half-batching one and not the other.
 
-  // existing photos get deleted immediately on click
+  // existing photos get deleted from the database immediately on click
   const handleDeleteExistingPhoto = async (photoId) => {
     if (!window.confirm("Διαγραφή αυτής της φωτογραφίας;")) return;
     setDeletingPhotoId(photoId);
@@ -815,4 +807,3 @@ export default function EditEvent() {
     </AppTheme>
   );
 }
-

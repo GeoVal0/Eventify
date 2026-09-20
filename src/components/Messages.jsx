@@ -8,6 +8,7 @@ import {useAuth } from '../context/AuthContext';
 import {getMessages, getSentMessages, sendMessage, markMessageAsRead, deleteMessage, fetchWithAuth, getEventDetail, getMyEvents, getEventBookings } from '../api'; 
 
 export default function Messages(props) {
+  // messages states for attendees and organizers
   const { user } = useAuth();
   const location = useLocation();
   const [currentFolder, setCurrentFolder] = useState(0); // 0 -> incoming, 1 -> sent, 2 -> new message
@@ -35,6 +36,7 @@ export default function Messages(props) {
 
   const [composeMode, setComposeMode] = useState(null);       // attendee or organizer
 
+  // API CALLS
   // fetches all messages
   const fetchAllMessages = async () => {
     setMessagesLoading(true);
@@ -62,6 +64,7 @@ export default function Messages(props) {
       const response = await fetchWithAuth('/api/bookings/mine');
       const bookings = Array.isArray(response) ? response : (response?.items || []);
 
+      // if the user has made multiple bookings for the same event, we only need the event only once
       const uniqueEvents = [];
       const seenIds = new Set();
 
@@ -112,6 +115,7 @@ export default function Messages(props) {
     setAttendeesError(null);
     try {
       const bookings = await getEventBookings(eventId);
+      // if the user has made multiple bookings for the same event, we only need the user once
       const uniqueAttendees = [];
       const seenIds = new Set();
       for (const b of bookings) {
@@ -133,14 +137,17 @@ export default function Messages(props) {
       
   };
 
+  // initialiaztion
   useEffect(() => {
     if (!user) return;
+
     fetchAllMessages();
-     // arrived here from ViewEvent's "message this attendee" link 
+
+     // arrived here from ViewEvent's "message this attendee" link, so we prefil the form and jump to "New" tab
     const prefill = location.state;
     if (prefill?.prefillEventId) {
       setComposeMode('organizer');
-      setCurrentFolder(2);
+      setCurrentFolder(2);      // "new" tab
       setSelectedOrganizerEventId(prefill.prefillEventId);
       if (prefill.prefillAttendeeId != null) {
         setSelectedRecipientId(prefill.prefillAttendeeId);
@@ -153,6 +160,7 @@ export default function Messages(props) {
         fetchOrganizerEvents(),
       ]);
       if (prefill?.prefillEventId) return;
+
       if (bookings.length > 0) {
         setComposeMode('attendee');
       } else if (events.length > 0) {
@@ -161,6 +169,7 @@ export default function Messages(props) {
     })();
   }, [user]);
 
+  // fetches the attendees for the event when an organizer tries to send a message about this event
   useEffect(() => {
     if (selectedOrganizerEventId) {
       fetchAttendees(selectedOrganizerEventId);
@@ -170,11 +179,11 @@ export default function Messages(props) {
   }, [selectedOrganizerEventId]);
 
   
-  const unreadCount = inbox.filter(msg => !msg.is_read).length;
-  const activeMessages = currentFolder === 0 ? inbox : sent;
+  const unreadCount = inbox.filter(msg => !msg.is_read).length;   // how many unread messages
+  const activeMessages = currentFolder === 0 ? inbox : sent;      // which tab of messages to display
 
-  // helpers
-
+  // HANDLERS
+  // deletes a message
   const handleDelete = async (id, e) => {
     e.stopPropagation();
     try {
@@ -187,10 +196,12 @@ export default function Messages(props) {
     }
   };
 
+  // marks a message as read when clicked in the inbox
   const handleReadMessage = async (msg) => {
     if (currentFolder === 0 && !msg.is_read) {
       try {
         await markMessageAsRead(msg.id);
+        // update local state
         setInbox(prev => prev.map(m => m.id === msg.id ? { ...m, is_read: true } : m));
       } catch (error) {
         console.error("Failed to mark as read:", error);
@@ -198,6 +209,7 @@ export default function Messages(props) {
     }
   };
 
+  // adds a newly snet message to the local sent folder state, doesnt need to refetch the entire folder
   const addToSentLocally = (created, fallback) => {
     setSent(prev => [
       created && created.id ? created : { id: `local-${Date.now()}`, ...fallback },
@@ -205,11 +217,13 @@ export default function Messages(props) {
     ]);
   };
 
+  // clears the input fields in the composer
   const resetComposeFields = () => {
     setMessageSubject('');
     setMessageBody('');
   };
 
+  // logic for an attendee sending a message to an event organizer
   const handleSendAsAttendee = async () => {
     if (!selectedEventId) {
       alert("Παρακαλώ επιλέξτε την εκδήλωση για την οποία θέλετε να στείλετε μήνυμα.");
@@ -218,6 +232,7 @@ export default function Messages(props) {
 
     try {
       setSending(true);
+      // we need the orgnizer's ID to send a message so we fetch the event details
       const eventDetails = await getEventDetail(selectedEventId);
 
       const orgId = eventDetails.organizer_id || eventDetails.organizerId;
@@ -245,6 +260,7 @@ export default function Messages(props) {
         sent_at: new Date().toISOString(),
       });
 
+      // cleanup and redirect the user to their sent folder
       setSelectedEventId('');
       resetComposeFields();
       setCurrentFolder(1);
@@ -255,6 +271,7 @@ export default function Messages(props) {
     }
   };
       
+  // logic for an organizer sending a message to an attendee
   const handleSendAsOrganizer = async () => {
     if (!selectedOrganizerEventId) {
       alert("Παρακαλώ επιλέξτε την εκδήλωσή σας.");
@@ -277,6 +294,7 @@ export default function Messages(props) {
       };
       const created = await sendMessage(payload);
 
+      // show the message in sent immediately instead of waiting
       addToSentLocally(created, {
         event_id: selectedOrganizerEventId,
         event_title: eventInfo?.title,
@@ -286,6 +304,7 @@ export default function Messages(props) {
         sent_at: new Date().toISOString(),
       });
 
+      // cleanup and redirect the user to their sent folder
       setSelectedRecipientId('');
       resetComposeFields();
       
@@ -299,6 +318,7 @@ export default function Messages(props) {
 
   if (!user) return null;
 
+  // checks if the user can send a message
   const canActAsAttendee = bookedEvents.length > 0;
   const canActAsOrganizer = organizerEvents.length > 0;
 

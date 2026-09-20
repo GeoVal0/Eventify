@@ -8,8 +8,8 @@ import {getMessages, exportEventsXml, exportEventsJson } from '../api';
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user, logout } = useAuth();
+  const location = useLocation();     // hook to get the current URL path
+  const { user, logout } = useAuth(); // access global authentication state
 
   // dropdown states
   const [registerAnchorEl, setRegisterAnchorEl] = useState(null);
@@ -29,6 +29,8 @@ export default function Navbar() {
     setActiveButton(getActiveButtonFromPath());
   }, [location.pathname]);
 
+
+  // handlers for dropdowns
   const handleRegisterClick = (event) => setRegisterAnchorEl(event.currentTarget);
   const handleRegisterClose = () => setRegisterAnchorEl(null);
 
@@ -53,6 +55,7 @@ export default function Navbar() {
     }
   });
 
+  // handles navigation for organizer routes
   const handleOrganizerNavigation = (path) => {
     handleOrganizerClose();
     
@@ -60,20 +63,22 @@ export default function Navbar() {
       // not logged in -> go to login, remembering where we were headed
       navigate("/login", { state: { from: path } });
     } else if (user.role !== "ORGANIZER") {
-      logout();
+      logout();       // logged in but no as organizer -> log out, then send to login  
       navigate("/login", { state: { from: path } });
     } else {
       navigate(path);
     }
   };
 
+  // handles navigation for admin routes
   const handleAdminNavigation = (path) => {
     handleAdminClose();
     
     if (!user) {
+      // not logged in -> go to login, remembering where we were headed
       navigate("/login", { state: { from: path } });
     } else if (user.role !== "ADMIN") {
-      logout();
+      logout();     // logged in but no as admin -> log out, then send to login 
       navigate("/login", { state: { from: path } });
     } else {
       navigate(path);
@@ -94,6 +99,7 @@ export default function Navbar() {
       return;
     }
     try {
+      // call the right API function based on the request
       if (format === 'xml') {
         await exportEventsXml();
       } else {

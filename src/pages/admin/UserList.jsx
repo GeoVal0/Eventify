@@ -7,7 +7,6 @@ import {useNavigate } from 'react-router-dom';
 import {getUsers, approveUser, rejectUser } from '../../api';
 
 export default function ApplicationHistoryPage(props) {
-  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [applications, setApplications] = useState([]);
@@ -21,7 +20,7 @@ export default function ApplicationHistoryPage(props) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await getUsers();            // fetches from /api/admin/users[cite: 5]
+      const data = await getUsers();            // GET /api/admin/users
       setApplications(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -65,7 +64,7 @@ export default function ApplicationHistoryPage(props) {
   // connect action buttons to API
   const handleAccept = async (userId) => {
     try {
-      await approveUser(userId);
+      await approveUser(userId);            // PUT /api/admin/users/{user_id}/approve
       alert("Η εγγραφή εγκρίθηκε!");
       fetchData();                          // refresh list automatically
     } catch (err) {
@@ -76,7 +75,7 @@ export default function ApplicationHistoryPage(props) {
   const handleCancel = async (userId) => {
     if(!window.confirm("Σίγουρα θέλετε να απορρίψετε αυτόν τον χρήστη;")) return;
     try {
-      await rejectUser(userId);
+      await rejectUser(userId);           // PUT /api/admin/users/{user_id}/reject
       alert("Η εγγραφή απορρίφθηκε!");
       fetchData();                        // refresh list automatically
     } catch (err) {
@@ -90,7 +89,7 @@ export default function ApplicationHistoryPage(props) {
       if (statusFilter === 'all') return true;
       if (statusFilter === 'accepted') return app.is_approved === true;
       if (statusFilter === 'pending') return app.is_approved === false;
-      return false; // Backend permanently deletes rejected users, so 'rejected' yields nothing
+      return false;
     })
     .sort((a, b) => {
       const dateA = new Date(a.created_at);
@@ -266,9 +265,3 @@ export default function ApplicationHistoryPage(props) {
     </AppTheme>
   );
 }
-
-
-
-
-
-/////////////////////////////////// PREPEI NA MHN DIAGRAFONTAI ENTELOS TA AITIMATA OTAN PATAEI APORIPSI ALLA NA DEIXNEI OTI EXOYN APORIFTHEI

@@ -1,5 +1,6 @@
 export const API_BASE_URL = "http://localhost:8000";
 
+// all calls go through here to get the JWT token and handle errors
 export const fetchWithAuth = async (endpoint, options = {}) => {
   const token = localStorage.getItem("access_token");
   
@@ -15,18 +16,14 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401) {    // 401 unauthorized, expired or invalid token -> logout
       localStorage.removeItem("access_token");
       localStorage.removeItem("user_data");
       window.location.href = '/login'; 
     }
     const errorData = await response.json().catch(() => ({}));
     
-
-    // FastAPI validation errors (422) return `detail` as an array of
-    // {loc, msg, type} objects, not a string. Left as-is, `new Error(array)`
-    // stringifies to an unreadable "[object Object],[object Object]" --
-    // format it into something an alert() can actually show.
+    // modify fastAPI validation errors (422) to a readable format instead of an array of {loc, msg, type} objects
     let message;
     if (Array.isArray(errorData.detail)) {
       message = errorData.detail
@@ -38,26 +35,14 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
       message = `Request failed with status ${response.status}`;
     }
     throw new Error(message);
-    // throw new Error(errorData.detail || `Request failed with status ${response.status}`);
   }
 
-  if (response.status === 204) return null;
+  if (response.status === 204) return null;   // 204 -> no content
+
   return response.json();
 };
 
-export const checkServerHealth = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/`); 
-    if (!response.ok) {
-      throw new Error("Network response was not ok"); 
-    }
-    const data = await response.json(); 
-    return data; 
-  } catch (error) {
-    console.error("Error connecting to backend:", error); 
-    return null; 
-  }
-};
+// AUTHENTICATION ENDPOINTS
 
 export const loginUser = async (username, password) => {
   const formData = new URLSearchParams();
@@ -71,23 +56,31 @@ export const loginUser = async (username, password) => {
   });
 
   if (!response.ok) throw new Error("Login failed");
-  return response.json(); 
+  return response.json();     // returns JWT token
 };
+
+export const registerUser = async (userData) => {
+  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData), 
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Registration failed');
+  }
+  return response.json();   // returns JWT token
+};
+
+
+//ADMIN
 
 export const getUsers = () => {
   return fetchWithAuth('/api/admin/users');
 };
 
-//ADMIN
-// Admin-only data export (assignment §12, DTD in §7). Two separate
-// functions rather than one, because the two response shapes aren't alike:
-// XML comes back as a raw file with a Content-Disposition attachment
-// header, which fetchWithAuth can't handle (it always calls
-// response.json(), which would throw trying to parse XML) -- so this does
-// its own authenticated fetch and triggers the browser download directly.
-// JSON comes back as a plain JSON body (no attachment header at all), so
-// that one downloads client-side instead, for a consistent "export" UX
-// between the two formats.
+// helper function for downloads
 const triggerBlobDownload = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -130,20 +123,6 @@ export const getUserDetail = (userId) => {
   return fetchWithAuth(`/api/admin/users/${userId}`); 
 };
 
-export const registerUser = async (userData) => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData), 
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Registration failed');
-  }
-  return response.json();
-};
-
 //ORGANIZER
 export const createEvent = (eventData) => {
   return fetchWithAuth('/api/events', {
@@ -168,16 +147,11 @@ export const cancelEvent = (eventId) => {
   return fetchWithAuth(`/api/events/${eventId}/cancel`, { method: 'POST' }); 
 };
 
-// Sends a system message from the organizer to every distinct attendee who
-// booked this (now-cancelled) event. Confirmed against main.py -- this is a
-// real dedicated backend endpoint, not something built by looping sendMessage.
+// sends message to all attendees of an event when it gets cancelled
 export const notifyCancellation = (eventId) => {
   return fetchWithAuth(`/api/events/${eventId}/notify-cancellation`, { method: 'POST' });
 };
 
-// Confirmed against main.py: DELETE /api/events/{event_id}/photos/{photo_id},
-// organizer-only, 204 on success. photo_id comes from EventResponse.photos[i].id
-// (schemas.PhotoResponse) -- not the filename.
 export const deleteEventPhoto = (eventId, photoId) => {
   return fetchWithAuth(`/api/events/${eventId}/photos/${photoId}`, { method: 'DELETE' });
 };
@@ -205,11 +179,7 @@ export const getEvents = () => {
   return fetchWithAuth('/api/events'); 
 };
 
-// Confirmed against main.py + schemas.py: attendee-only (organizers/admins
-// get a 403), returns { events: EventSummary[], cold_start: bool }.
-// cold_start is true when the ranking isn't grounded in this attendee's
-// own booking history (new user, or falling all the way back to
-// popularity) -- worth showing a different heading for that case.
+// attendee-only (organizers/admin get a 403), returns coldstart=true when the algorithm has not enough data for the user
 export const getRecommendations = (limit = 10) => {
   return fetchWithAuth(`/api/recommendations?limit=${limit}`);
 };
@@ -228,10 +198,6 @@ export const getMessages = async () => {
   return await fetchWithAuth('/api/messages/inbox', { method: 'GET' }); 
 };
 
-// ASSUMPTION: mirrors the /api/messages/inbox naming pattern. There was no
-// "sent messages" endpoint anywhere in this file, so the Sent folder had no
-// way to ever populate. Confirm this route exists on the backend (or swap
-// in the real one) before relying on it.
 export const getSentMessages = async () => {
   return await fetchWithAuth('/api/messages/sent', { method: 'GET' });
 };
