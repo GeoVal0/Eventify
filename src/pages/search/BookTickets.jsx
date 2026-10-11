@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import {Box, Typography, Button, Avatar, Grid, Card, Select, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress, Breadcrumbs, Link} from '@mui/material';
 import AppTheme from '../../shared-theme/AppTheme';
-import {useLocation, useNavigate } from 'react-router-dom';
-import {useAuth } from '../../context/AuthContext'; 
-import {MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import {useLocation, useNavigate} from 'react-router-dom';
+import {useAuth} from '../../context/AuthContext'; 
+import {MapContainer, TileLayer, Marker, Popup} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import {createBooking, getEventDetail } from '../../api'; 
+import {createBooking, getEventDetail, API_BASE_URL} from '../../api'; 
 
 // setup map icon
 const customIcon = new L.Icon({
@@ -230,9 +230,9 @@ const handleConfirm = async () => {
                 component="img"
                 src={
                   event.cover_photo 
-                    ? `http://localhost:8000/static/uploads/${event.cover_photo}` 
+                    ? `${API_BASE_URL}/static/uploads/${event.cover_photo}` 
                     : event.photos && event.photos.length > 0 
-                      ? `http://localhost:8000/static/uploads/${event.photos[0].filename || event.photos[0]}`
+                      ? `${API_BASE_URL}/static/uploads/${event.photos[0].filename || event.photos[0]}`
                       : getFallbackImage(event)
                 }
                 alt={event.title}
@@ -295,7 +295,7 @@ const handleConfirm = async () => {
                   <Box
                     key={photo.id || index}
                     component="img"
-                    src={`http://localhost:8000/static/uploads/${photo.filename || photo}`}
+                    src={`${API_BASE_URL}/static/uploads/${photo.filename || photo}`}
                     alt={`${fullEvent.title} - photo ${index + 1}`}
                     sx={{
                       width: 220,

@@ -11,7 +11,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import {getEventDetail, getEventBookings, publishEvent, cancelEvent, deleteEvent, notifyCancellation} from '../../api';
+import {getEventDetail, getEventBookings, publishEvent, cancelEvent, deleteEvent, notifyCancellation, API_BASE_URL} from '../../api';
 
 // setup map icon
 const customIcon = new L.Icon({
@@ -205,9 +205,9 @@ export default function ViewEvent(props) {
                     component="img"
                     src={
                       event.cover_photo 
-                        ? `http://localhost:8000/static/uploads/${event.cover_photo}` 
+                        ? `${API_BASE_URL}/static/uploads/${event.cover_photo}` 
                         : event.photos && event.photos.length > 0 
-                          ? `http://localhost:8000/static/uploads/${event.photos[0].filename || event.photos[0]}`
+                          ? `${API_BASE_URL}/static/uploads/${event.photos[0].filename || event.photos[0]}`
                           : getFallbackImage(event)
                    }
                     alt={event.title}
@@ -374,7 +374,7 @@ export default function ViewEvent(props) {
                   <Box
                     key={photo.id || index}
                     component="img"
-                    src={`http://localhost:8000/static/uploads/${photo.filename || photo}`}
+                    src={`${API_BASE_URL}/static/uploads/${photo.filename || photo}`}
                     alt={`${event.title} - photo ${index + 1}`}
                     sx={{
                       width: 220,

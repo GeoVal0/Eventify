@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import {Box, Typography, Button, Grid, Card, CardContent, TextField, Checkbox, FormControlLabel, Avatar, InputAdornment, Divider, Breadcrumbs, Link} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AppTheme from '../../shared-theme/AppTheme';
-import {useNavigate, useLocation } from 'react-router-dom';
-import {useAuth } from '../../context/AuthContext';
+import {useNavigate, useLocation} from 'react-router-dom';
+import {useAuth} from '../../context/AuthContext';
 import Slider from '@mui/material/Slider';
-import {getEvents } from '../../api'; 
+import {getEvents, API_BASE_URL} from '../../api'; 
 
 const getWeekKey = (dateObj) => {
   const d = new Date(dateObj);
@@ -429,9 +429,9 @@ export default function EventSearchPage(props) {
                             component="img"
                             src={
                               event.cover_photo 
-                                ? `http://localhost:8000/static/uploads/${event.cover_photo}` 
+                                ? `${API_BASE_URL}/static/uploads/${event.cover_photo}` 
                                 : event.photos && event.photos.length > 0 
-                                  ? `http://localhost:8000/static/uploads/${event.photos[0].filename || event.photos[0]}`
+                                  ? `${API_BASE_URL}/static/uploads/${event.photos[0].filename || event.photos[0]}`
                                   : getFallbackImage(event)
                             }
                             alt={event.title}

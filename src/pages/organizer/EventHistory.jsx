@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {Box, Typography, Button, Card, CardContent, Select, MenuItem, FormControl, InputLabel, CircularProgress, Breadcrumbs, Link } from '@mui/material';
 import AppTheme from '../../shared-theme/AppTheme';
 import {useNavigate} from 'react-router-dom';
-import {getMyEvents, publishEvent} from '../../api';
+import {getMyEvents, publishEvent, API_BASE_URL} from '../../api';
 
 
 // if the organizer has not uploaded any photos for the event, the event will take a deafult photo based on the category 
@@ -192,9 +192,9 @@ export default function EventHistoryPage(props) {
                         component="img"
                         src={
                           event.cover_photo 
-                            ? `http://localhost:8000/static/uploads/${event.cover_photo}` 
+                            ? `${API_BASE_URL}/static/uploads/${event.cover_photo}` 
                             : event.photos && event.photos.length > 0 
-                              ? `http://localhost:8000/static/uploads/${event.photos[0].filename || event.photos[0]}`
+                              ? `${API_BASE_URL}/static/uploads/${event.photos[0].filename || event.photos[0]}`
                               : getFallbackImage(event)
                         }
                         alt={event.title}

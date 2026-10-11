@@ -365,7 +365,7 @@ export default function EditEvent() {
           const formData = new FormData();
           formData.append('file', photo);
 
-          await fetch(`http://localhost:8000/api/events/${eventId}/photos`, {
+          await fetch(`${API_BASE_URL}/api/events/${eventId}/photos`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData

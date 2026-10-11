@@ -20,7 +20,7 @@ import {useNavigate} from "react-router-dom";
 import {MapContainer, TileLayer, Marker, useMapEvents} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import {createEvent} from '../../api';
+import {createEvent, API_BASE_URL} from '../../api';
 
 // setup map icon
 const customIcon = new L.Icon({
@@ -323,7 +323,7 @@ export default function CreateEvent() {
           const formData = new FormData();
           formData.append('file', photo);
 
-          await fetch(`http://localhost:8000/api/events/${eventId}/photos`, {
+          await fetch(`${API_BASE_URL}/api/events/${eventId}/photos`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`

@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = "https://localhost:8000";
 
 // all calls go through here to get the JWT token and handle errors
 export const fetchWithAuth = async (endpoint, options = {}) => {

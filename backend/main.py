@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
 # Initialize the FastAPI application
 app = FastAPI(
     title="Event Management and Booking API",
-    description="REST API for the TED 2026 University Project",
+    description="REST API for the TED 2026 Project",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -79,9 +79,7 @@ app = FastAPI(
 # CORS Configuration
 # ==========================================
 origins = [
-    "http://localhost:3000",
     "https://localhost:5173",
-    "http://localhost:3001" # Added 3001 just in case React defaults to it!
 ]
 
 app.add_middleware(

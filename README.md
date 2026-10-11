@@ -1,3 +1,9 @@
+Team members:
+Γεωργία - Μαρία Βάλβη 1115202200229
+Βασίλειος Ζαρίτας 1115202200046
+
+# Eventify Frontend
+
 # Eventify Backend
 
 FastAPI + SQLAlchemy + SQLite REST API for the TED 2026 assignment (event management

@@ -27,6 +27,7 @@ function App() {
     <RecommendedEvents />
 
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/Home" element={<Home />} />
         <Route path="/messages" element={<Messages />} />
 

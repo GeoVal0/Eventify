@@ -5,7 +5,7 @@ import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import {useNavigate} from 'react-router-dom';
 import AppTheme from '../shared-theme/AppTheme';
 import {useAuth} from '../context/AuthContext';
-import {getEvents, getRecommendations} from '../api';
+import {getEvents, getRecommendations, API_BASE_URL} from '../api';
 
 const CATEGORY_IMAGES = {
   music: '/public/1061513-taylor-swift-en-concert-a-paris-la-defense-arena-on-y-etait-on-vous-raconte.jpg',
@@ -204,9 +204,9 @@ export default function Home(props) {
                         component="img"
                         height="150"
                         image={event.cover_photo 
-                                ? `http://localhost:8000/static/uploads/${event.cover_photo}` 
+                                ? `${API_BASE_URL}/static/uploads/${event.cover_photo}` 
                                 : event.photos && event.photos.length > 0 
-                                  ? `http://localhost:8000/static/uploads/${event.photos[0].filename || event.photos[0]}`
+                                  ? `${API_BASE_URL}/static/uploads/${event.photos[0].filename || event.photos[0]}`
                                   : getFallbackImage(event)}
                         alt={event.title}
                         sx={{borderRadius: 1}}
