@@ -2,9 +2,6 @@
 **README**
 Γεωργία - Μαρία Βάλβη (1115202200229)  
 Βασίλειος Ζαρίτας (1115202200046)  
-September 22, 2026
-
-*Note: This document was generated from `README.pdf`.*
 
 ---
 
